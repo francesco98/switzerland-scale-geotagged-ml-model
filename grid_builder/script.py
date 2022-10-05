@@ -79,8 +79,8 @@ def savePoints(points: list[s2.S2CellId]):
         writer.writerows(data)
 
 def createGrid(points: list[s2.S2CellId]):
-    minPoints = 1 # Minimum number of points contained by a cell
-    maxPoints = 10 # Maximum number of points contained by a cell
+    minPoints = 100 # Minimum number of points contained by a cell
+    maxPoints = 1000 # Maximum number of points contained by a cell
 
     selectedCells = [] # Selected cell to represent a class
 
@@ -115,7 +115,7 @@ def createGrid(points: list[s2.S2CellId]):
 
             currentCell = currentCell.next()
             
-        print(f"--> #classes: {len(selectedCells)} - #points: {len(points)}")
+        print(f"--> #classes: {len(selectedCells)} - #remaining_points: {len(points)}")
        
         # If we still have cells to split, let's pop children of the first element
         if len(nextLevelCells) > 0:
@@ -128,8 +128,8 @@ def createGrid(points: list[s2.S2CellId]):
 # Main function
 
 def main():
-    points = readJson("../download_data/flickr_images.json")
+    points = readJson("geotagsCH.json")
     data = createGrid(points)
-    generateCsv("grid-flickr", data)
+    generateCsv("grid-wws-ch", data)
     
 main()
