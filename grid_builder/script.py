@@ -42,8 +42,8 @@ def generateCsv(name, wkt: list[levelWkt]):
         writer.writerow(header)
         writer.writerows(data)
 
-def readJson():
-    with open("geotags-example.json") as f:
+def readJson(filename: str):
+    with open(filename) as f:
         data = json.load(f)
     
     return [s2.S2CellId(s2.S2LatLng.FromDegrees(row['latitude'], row['longitude']).Normalized()) for row in data]
@@ -128,8 +128,8 @@ def createGrid(points: list[s2.S2CellId]):
 # Main function
 
 def main():
-    points = readJson()
+    points = readJson("../download_data/flickr_images.json")
     data = createGrid(points)
-    generateCsv("grid", data)
+    generateCsv("grid-flickr", data)
     
 main()
