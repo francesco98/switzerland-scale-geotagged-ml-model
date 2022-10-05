@@ -83,21 +83,24 @@ def search_images_within_switzerland(images: dict, file):
     page = 1
     cnt = 1
     while True:
-        photos = flickr.photos.search(text='switzerland', bbox=bounding_box, extras='url_c,license', page=page)
+        #photos = flickr.photos.search(text='switzerland', bbox=bounding_box, extras='url_c,license', page=page)
+        photos = flickr.photos.search(tags='Switzerland', bbox=bounding_box, extras='url_c,license', page=page)
 
         total = photos['photos']['total']
         pages = photos['photos']['pages']
+        photo_list = photos['photos']['photo']
         lines = []
 
         print(f'Page {page}/{pages}, element {cnt}/{total}')
 
-        for elem in photos['photos']['photo']:
+        for elem in photo_list:
 
             id = elem['id']
             url = elem['url_c']
             title = elem['title']
 
             if id in images:
+                print(f'Id {id} already found (title {title})')
                 cnt += 1
                 continue
 
@@ -106,15 +109,16 @@ def search_images_within_switzerland(images: dict, file):
                 latitude = location['photo']['location']['latitude']
                 longitude = location['photo']['location']['longitude']
 
-                # print(f'Photo {cnt}/{total} : id={id} title={title} longitude={longitude} latitude={latitude}')
+                print(f'Photo {cnt}/{total} : id={id} title={title} longitude={longitude} latitude={latitude}')
 
                 lines.append(f'{id},{url},{longitude},{latitude}\n')
                 images[id] = {'url': url, 'long': longitude, 'lat': latitude}
+                cnt += 1
             except:
                 print(f'ERROR photo {cnt}/{total} : id={id} title={title} no coordinates found')
 
-            cnt += 1
 
+        print(f'Page {page}/{pages} found {len(lines)}/{len(photo_list)} new files')
         file.writelines(lines)
         file.flush()
         page += 1
