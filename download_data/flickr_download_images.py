@@ -84,7 +84,7 @@ def search_images_within_switzerland(images: dict, file):
     cnt = 1
     while True:
         #photos = flickr.photos.search(text='switzerland', bbox=bounding_box, extras='url_c,license', page=page)
-        photos = flickr.photos.search(tags='Switzerland', bbox=bounding_box, extras='url_c,license', page=page)
+        photos = flickr.photos.search(tags='switzerland', bbox=bounding_box, extras='url_c,license', page=page)
 
         total = photos['photos']['total']
         pages = photos['photos']['pages']
