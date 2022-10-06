@@ -1,7 +1,10 @@
-import pywraps2 as s2
+import s2geometry.pywraps2 as s2
 import csv
 
 # Class to represent coordinates (lat, lng)
+from typing import List
+
+
 class Point:
     def __init__(self, lat_degrees: float, lng_degrees: float):
         self.latLng = s2.S2LatLng.FromDegrees(lat_degrees, lng_degrees).Normalized()
@@ -33,7 +36,7 @@ class Image:
 
 # Class to build the grid
 class Grid:
-    def __init__(self, images: list[Image], lowerBound: Point, upperBound: Point, minPoints: int, maxPoints: int):
+    def __init__(self, images: List[Image], lowerBound: Point, upperBound: Point, minPoints: int, maxPoints: int):
         for image in images:
             if not image.is_bounded(lowerBound, upperBound):
                 raise ValueError('Your points are not inside the given boundary')
@@ -45,7 +48,7 @@ class Grid:
         self.__gridArray = None
     
     @property
-    def gridArray(self) -> list[s2.S2CellId]:
+    def gridArray(self) -> List[s2.S2CellId]:
         if self.__gridArray == None:
             raise ValueError("You have to build the grid before retrieving it")
 
@@ -62,17 +65,17 @@ class Grid:
         
         return [insideCellImages, outsideCellImages]
     
-    def __assignLabel(self, images: list[Image], label):
+    def __assignLabel(self, images: List[Image], label):
         for image in images:
             image.label = label
 
-    def __processCurrentCell(self, currentCell: s2.S2CellId, nextCellsQueue: list[s2.S2CellId]):
+    def __processCurrentCell(self, currentCell: s2.S2CellId, nextCellsQueue: List[s2.S2CellId]):
         insideCellImages, outsideCellImages = self.__splitImagesByCell(currentCell)
 
         # Ignoring cells not having the minimum points
         if len(insideCellImages) > self.__minPoints:
             # If the cell contains at most the maximum number of points (or it is a leaf), than it is a class
-            if len(insideCellImages) <= self.__maxPoints or currentCell.is_leaf():
+            if len(insideCellImages) <= self.__maxPoints or currentCell.level() == currentCell.kMaxLevel:
                 self.__gridArray.append(currentCell)
                 self.__assignLabel(insideCellImages, len(self.__gridArray)-1)
                                     
@@ -121,7 +124,7 @@ class Grid:
             wktList.append([index, "POLYGON ((" + ",".join([str(point) for point in points]) + "))"]) 
 
         if fileName:
-            header = ['ID', 'WKT']
+            header = ['# ID', 'WKT']
 
             with open(fileName, 'w', encoding='UTF8') as f:
                 writer = csv.writer(f)
