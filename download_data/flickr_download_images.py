@@ -1,7 +1,10 @@
 import os.path
-import webbrowser
+import csv
 
 import flickrapi
+
+
+CSV_HEADER = ['# id', 'url', 'longitude', 'latitude']
 
 
 def initialize_flickr(authorize: bool=False):
@@ -32,43 +35,39 @@ def initialize_flickr(authorize: bool=False):
 
 
 def read_file(images: map):
-    file_name = 'flickr_images.txt'
+    file_name = 'flickr_images.csv'
 
     # open file for reading
     if not os.path.isfile(file_name):
-        file = open(file_name, 'x')
-        file.writelines(['# image-id:url,longitude,latitude\n'])
-        file.close()
+        with open(file_name, 'x', encoding='UTF8', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(CSV_HEADER)
 
-    file = open(file_name, 'r')
+    with open(file_name, 'r', encoding='UTF8', newline='') as file:
+        reader = csv.reader(file)
 
-    Lines = file.readlines()
-    for line in Lines:
-        line = line.strip()
-        if len(line) < 1 or line.startswith('#'):
-            continue
-        tokens = line.split(sep=',')
-        key = tokens[0]
+        for tokens in reader:
+            key = tokens[0]
 
-        if key in images:
-            msg = f'ERROR: duplicated image id {key}'
-            print(msg)
-            raise RuntimeError(msg)
+            if key.startswith('#'):
+                continue
 
-        images[key] = {'url': tokens[1], 'long': tokens[2], 'lat': tokens[3]}
+            if key in images:
+                msg = f'ERROR: duplicated image id {key}'
+                print(msg)
+                raise RuntimeError(msg)
 
-    file.close()
+            images[key] = {CSV_HEADER[1]: tokens[1], CSV_HEADER[2]: tokens[2], CSV_HEADER[3]: tokens[3]}
 
-
-    # open for writting/appendimng
-    file = open(file_name, 'a')
+    # open for writing/appending
+    file = open(file_name, 'a', encoding='UTF8', newline='')
 
     return file
 
 
 
 
-def search_images_within_switzerland(images: dict, file):
+def search_images_within_switzerland(flickr, images: dict, file):
     # coordinates bounding boy switzerland according https://giswiki.hsr.ch/Bounding_Box
     min_latitude = 45.6755
     max_latitude = 47.9163
@@ -80,6 +79,7 @@ def search_images_within_switzerland(images: dict, file):
 
     all_photos = []
 
+    writer = csv.writer(file)
     page = 1
     cnt = 1
     while True:
@@ -95,9 +95,13 @@ def search_images_within_switzerland(images: dict, file):
 
         for elem in photo_list:
 
-            id = elem['id']
-            url = elem['url_c']
-            title = elem['title']
+            id = elem.get('id')
+            url = elem.get('url_c')
+            title = elem.get('title')
+
+            if id is None or url is None:
+                print(f'ERROR incomplete data: id {id} url {url} title {title}')
+                continue
 
             if id in images:
                 print(f'Id {id} already found (title {title})')
@@ -111,25 +115,28 @@ def search_images_within_switzerland(images: dict, file):
 
                 print(f'Photo {cnt}/{total} : id={id} title={title} longitude={longitude} latitude={latitude}')
 
-                lines.append(f'{id},{url},{longitude},{latitude}\n')
-                images[id] = {'url': url, 'long': longitude, 'lat': latitude}
+                lines.append([id, url, longitude, latitude])
+                images[id] = {CSV_HEADER[1]: url, CSV_HEADER[2]: longitude, CSV_HEADER[3]: latitude}
                 cnt += 1
             except:
                 print(f'ERROR photo {cnt}/{total} : id={id} title={title} no coordinates found')
 
 
         print(f'Page {page}/{pages} found {len(lines)}/{len(photo_list)} new files')
-        file.writelines(lines)
-        file.flush()
+
+        if len(lines) > 0:
+            writer.writerows(lines)
+            file.flush()
+
         page += 1
 
 
-flickr = initialize_flickr(False)
+def main():
+    flickr = initialize_flickr(False)
+    images = {}
+    with read_file(images) as file:
+        search_images_within_switzerland(flickr, images, file)
 
 
-images = {}
-
-file = read_file(images)
-search_images_within_switzerland(images, file)
-
-
+if __name__ == '__main__':
+    main()
