@@ -126,7 +126,7 @@ class Grid:
         if fileName:
             header = ['# ID', 'WKT']
 
-            with open(fileName, 'w', encoding='UTF8') as f:
+            with open(fileName, 'w', encoding='UTF8', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(header)
                 writer.writerows(wktList)
