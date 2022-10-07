@@ -20,8 +20,11 @@ def down_load_images(file_name: str, data_dir: str):
         if os.path.isfile(data_dir+'/'+name):
             print(f'Already existing {cnt}/{total} {name}')
         else:
-            print(f'Downloading {cnt}/{total} {name}')
-            urllib.request.urlretrieve(url, data_dir+'/'+name)
+            try:
+                urllib.request.urlretrieve(url, data_dir+'/'+name)
+                print(f'Downloaded {cnt}/{total} {name}')
+            except urllib.error.HTTPError as e:
+                print(f'Downloading {cnt}/{total} {name} failed: {e.code} {e.msg}')
 
         cnt += 1
 
