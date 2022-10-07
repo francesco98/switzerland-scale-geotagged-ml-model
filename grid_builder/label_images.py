@@ -1,4 +1,4 @@
-
+# On Mac, run it with DYLD_LIBRARY_PATH=/usr/local/lib python3 label_images.py
 import csv
 import os
 
@@ -45,4 +45,4 @@ def create_labels(input_filename):
 if __name__ == '__main__':
 
     create_labels('flickr_images.csv')
-    create_labels('geotags_233K.csv')
+    create_labels('geotags_185K.csv')

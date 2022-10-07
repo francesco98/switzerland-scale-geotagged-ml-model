@@ -1,3 +1,6 @@
+# if MacOS:
+# import pywraps2 as s2
+# else:
 import s2geometry.pywraps2 as s2
 import csv
 
@@ -75,7 +78,7 @@ class Grid:
         # Ignoring cells not having the minimum points
         if len(insideCellImages) > self.__minPoints:
             # If the cell contains at most the maximum number of points (or it is a leaf), than it is a class
-            if len(insideCellImages) <= self.__maxPoints or currentCell.level() == currentCell.kMaxLevel:
+            if len(insideCellImages) <= self.__maxPoints or currentCell.level() == s2.S2CellId.kMaxLevel:
                 self.__gridArray.append(currentCell)
                 self.__assignLabel(insideCellImages, len(self.__gridArray)-1)
                                     

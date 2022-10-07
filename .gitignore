@@ -2,7 +2,6 @@
 .idea/
 .ipynb_checkpoints/
 __pycache__/
-download_data/.DS_Store
 grid_builder/.DS_Store
 grid_builder/input/.DS_Store
 grid_builder/output/.DS_Store
