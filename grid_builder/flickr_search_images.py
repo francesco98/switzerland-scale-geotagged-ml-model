@@ -34,8 +34,9 @@ def initialize_flickr(authorize: bool=False):
 
 
 
-def read_file(images: map):
-    file_name = 'input/flickr_images.csv'
+def read_cvs_file(file_name: str):
+
+    images = {}
 
     # open file for reading
     if not os.path.isfile(file_name):
@@ -59,10 +60,7 @@ def read_file(images: map):
 
             images[key] = {CSV_HEADER[1]: tokens[1], CSV_HEADER[2]: tokens[2], CSV_HEADER[3]: tokens[3]}
 
-    # open for writing/appending
-    file = open(file_name, 'a', encoding='UTF8', newline='')
-
-    return file
+    return images
 
 
 
@@ -132,9 +130,11 @@ def search_images_within_switzerland(flickr, images: dict, file):
 
 
 def main():
+    file_name = 'input/flickr_images.csv'
+    images = read_cvs_file(file_name)
     flickr = initialize_flickr(False)
-    images = {}
-    with read_file(images) as file:
+
+    with open(file_name, 'a', encoding='UTF8', newline='') as file:
         search_images_within_switzerland(flickr, images, file)
 
 

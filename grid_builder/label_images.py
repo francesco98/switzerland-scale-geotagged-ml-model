@@ -1,4 +1,3 @@
-# RUN USING DYLD_LIBRARY_PATH=/usr/local/lib
 
 import csv
 import os
