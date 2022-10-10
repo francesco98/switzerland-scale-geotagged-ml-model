@@ -32,6 +32,49 @@ def initialize_flickr(authorize: bool=False):
     return flickr
 
 
+def read_excluded_file(file_name: str):
+    ids = {}
+
+    with open(file_name, 'r', encoding='UTF8', newline='') as file:
+        reader = csv.reader(file)
+
+        for tokens in reader:
+            if len(tokens) == 0 or tokens[0].startswith('#'):
+                continue
+
+            key = tokens[0]
+            if key in ids:
+                msg = f'ERROR: duplicated image id {key}'
+                print(msg)
+                raise RuntimeError(msg)
+
+            ids[key] = tokens[1]
+
+        return ids
+
+
+def read_labels_file(file_name: str):
+
+    labels = {}
+    with open(file_name, 'r', encoding='UTF8', newline='') as file:
+        reader = csv.reader(file)
+
+        for tokens in reader:
+
+            if len(tokens) == 0 or tokens[0].startswith('#'):
+                continue
+
+            key = tokens[0]
+
+            if key in labels:
+                msg = f'ERROR: duplicated image id {key}'
+                print(msg)
+                raise RuntimeError(msg)
+
+            labels[key] = tokens[1]
+
+    return labels
+
 
 
 def read_cvs_file(file_name: str):
@@ -48,10 +91,11 @@ def read_cvs_file(file_name: str):
         reader = csv.reader(file)
 
         for tokens in reader:
-            key = tokens[0]
 
-            if key.startswith('#'):
+            if len(tokens) == 0 or tokens[0].startswith('#'):
                 continue
+
+            key = tokens[0]
 
             if key in images:
                 msg = f'ERROR: duplicated image id {key}'
