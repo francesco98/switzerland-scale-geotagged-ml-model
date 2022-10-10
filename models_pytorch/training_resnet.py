@@ -127,11 +127,11 @@ if __name__ == '__main__':
 
     # adnwsrtx01
     base_dir = '/home/test-dev/projects/adncuba-geolocation-classifier/grid_builder'
-    data_dir = '/mnt/store/geolocation_classifier/'
+    data_dir = '/mnt/store/geolocation_classifier/datadir'
 
     # hacke vmware
-    base_dir = '/home/hacke/projects/adncuba-geolocation-classifier/grid_builder'
-    data_dir = '/home/hacke/projects/data/geolocation_classifier'
+    #base_dir = '/home/hacke/projects/adncuba-geolocation-classifier/grid_builder'
+    #data_dir = '/home/hacke/projects/data/geolocation_classifier'
 
     data_helper_flicker = DataHelper(base_dir=base_dir, dataset_name='flickr_images', data_dir=data_dir, test_fraction=0.8, seed=42)
     main(data_helper_flicker)

@@ -155,18 +155,18 @@ class DataHelper:
         return updated
 
 
-def check_data_set(data_set_name: str):
+def check_data_set(base_dir: str, data_set_name: str, data_dir: str):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    helper = DataHelper(base_dir='/home/hacke/projects/adncuba-geolocation-classifier/grid_builder',
+    helper = DataHelper(base_dir=base_dir,
                         dataset_name=data_set_name,
-                        data_dir='/home/hacke/projects/data/geolocation_classifier',
+                        data_dir=data_dir,
                         test_fraction=0.8, seed=42)
 
     if helper.update_excluded_file():
-        helper = DataHelper(base_dir='/home/hacke/projects/adncuba-geolocation-classifier/grid_builder',
+        helper = DataHelper(base_dir=base_dir,
                             dataset_name=data_set_name,
-                            data_dir='/home/hacke/projects/data/geolocation_classifier',
+                            data_dir=data_dir,
                             test_fraction=0.8, seed=42)
 
     training_data = ImageGeolocationDataset(helper.training_data)
@@ -184,5 +184,13 @@ def check_data_set(data_set_name: str):
 
 
 if __name__ == '__main__':
-    check_data_set('flickr_images')
+    # adnwsrtx01
+    base_dir = '/home/test-dev/projects/adncuba-geolocation-classifier/grid_builder'
+    data_dir = '/mnt/store/geolocation_classifier/datadir'
+
+    # hacke vmware
+    # base_dir = '/home/hacke/projects/adncuba-geolocation-classifier/grid_builder'
+    # data_dir = '/home/hacke/projects/data/geolocation_classifier'
+
+    check_data_set(base_dir, 'flickr_images', data_dir)
 
