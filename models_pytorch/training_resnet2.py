@@ -51,12 +51,15 @@ def test(model, device, test_loader):
         100. * correct / len(test_loader.dataset)))
 
 
-def get_model(num_classes: int, input_shape):
+def get_model(device, num_classes: int, input_shape):
     model_ft = models.resnet18(weights=ResNet18_Weights.DEFAULT)
     num_ftrs = model_ft.fc.in_features
 
     # set numer of classes
     model_ft.fc = nn.Linear(num_ftrs, num_classes)
+
+    model_ft = model_ft.to(device)
+
     # print a summary
     summary(model_ft, input_shape)
     return model_ft
@@ -143,8 +146,7 @@ def main():
     train_loader = torch.utils.data.DataLoader(training_dataset,**train_kwargs)
     test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
 
-    model = get_model(num_classes, input_shape)
-    model = model.to(device)
+    model = get_model(device, num_classes, input_shape)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 
