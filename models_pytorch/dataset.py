@@ -172,7 +172,7 @@ class DataHelper:
         return updated
 
 
-def check_data_set(base_dir: str, data_set_name: str, data_dir: str):
+def check_data_set(base_dir: str, data_set_name: str, data_dir: str, check_all_batches: bool):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     helper = DataHelper(base_dir=base_dir,
@@ -188,13 +188,19 @@ def check_data_set(base_dir: str, data_set_name: str, data_dir: str):
 
     training_data = ImageGeolocationDataset(helper.training_data)
     data, label = training_data[1]
-    training_data_loader = torch.utils.data.DataLoader(training_data, batch_size=1, shuffle=True)
+    training_data_loader = torch.utils.data.DataLoader(training_data, batch_size=250, shuffle=True)
 
+    cnt = 0
     for batch in training_data_loader:
         input = batch[0]
         label = batch[1]
         input = input.to(device)
         label = label.to(device)
+
+        cnt += 1
+        if not check_all_batches and cnt > 1000:
+            print('Stopping batch check')
+            break
 
     print(f'Checked dataset {data_set_name}')
 
@@ -209,5 +215,5 @@ if __name__ == '__main__':
     # base_dir = '/home/hacke/projects/adncuba-geolocation-classifier/grid_builder'
     # data_dir = '/home/hacke/projects/data/geolocation_classifier'
 
-    check_data_set(base_dir, 'flickr_images', data_dir)
-
+    check_data_set(base_dir, 'flickr_images', data_dir, False)
+    check_data_set(base_dir, 'geotag_185K', data_dir, False)
