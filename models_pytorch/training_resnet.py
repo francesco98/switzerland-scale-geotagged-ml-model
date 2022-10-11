@@ -109,7 +109,6 @@ def main(data_helper):
 
     model_ft = model_ft.to(device)
     criterion = nn.CrossEntropyLoss()
-
     # Observe that all parameters are being optimized
     optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.001, momentum=0.9)
 

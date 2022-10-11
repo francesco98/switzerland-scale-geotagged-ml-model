@@ -8,6 +8,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms, models
 from torch.optim.lr_scheduler import StepLR
+from torchvision.models import ResNet18_Weights
+from torchsummary import summary
 
 from models_pytorch.dataset import DataHelper, ImageGeolocationDataset
 
@@ -49,16 +51,14 @@ def test(model, device, test_loader):
         100. * correct / len(test_loader.dataset)))
 
 
-def get_model(num_classes: int):
-    model_ft = models.resnet18(pretrained=True)
+def get_model(num_classes: int, input_shape):
+    model_ft = models.resnet18(weights=ResNet18_Weights.DEFAULT)
     num_ftrs = model_ft.fc.in_features
 
     # set numer of classes
     model_ft.fc = nn.Linear(num_ftrs, num_classes)
-
-    params = model_ft.parameters()
-
-    print(f'Created pretrained Resnet18 model for {num_classes} classes with {len(params)} parameters')
+    # print a summary
+    summary(model_ft, input_shape)
     return model_ft
 
 
@@ -71,16 +71,13 @@ def create_datahelper():
     data_dir = '/mnt/store/geolocation_classifier/datadir'
 
     # hacke vmware
-    if hostname is 'adnlt903-vm1':
+    if hostname.startswith('adnlt903'):
         base_dir = '/home/hacke/projects/adncuba-geolocation-classifier/grid_builder'
         data_dir = '/home/hacke/projects/data/geolocation_classifier'
 
     data_helper = DataHelper(base_dir=base_dir, dataset_name='flickr_images', data_dir=data_dir, test_fraction=0.8, seed=42)
 
-    trainimg_dataset = ImageGeolocationDataset(data_helper.training_data)
-    test_dataset = ImageGeolocationDataset(data_helper.test_data)
-
-    return trainimg_dataset, test_dataset
+    return data_helper
 
 
 def main():
@@ -136,12 +133,15 @@ def main():
     data_helper = create_datahelper()
     training_dataset = ImageGeolocationDataset(data_helper.training_data)
     test_dataset = ImageGeolocationDataset(data_helper.test_data)
+
     num_classes = len(data_helper.all_labels)
+    data, label = training_dataset[0]
+    input_shape = data.shape
 
     train_loader = torch.utils.data.DataLoader(training_dataset,**train_kwargs)
     test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
 
-    model = get_model(num_classes)
+    model = get_model(num_classes, input_shape)
     model = model.to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
