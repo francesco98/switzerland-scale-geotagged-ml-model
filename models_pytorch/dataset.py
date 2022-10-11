@@ -147,7 +147,7 @@ class DataHelper:
         with open(self.base_dir + '/output/' + self.dataset_name + '_excluded.csv', 'a', encoding='UTF8', newline='') as file:
             writer = csv.writer(file)
 
-            for data in self.all_data:
+            for idx, data in enumerate(self.all_data):
                 id = data['id']
                 filename = data['filename']
                 try:
@@ -155,7 +155,7 @@ class DataHelper:
                     image = call_transforms(image)
                 except Exception as e:
                     updated = True
-                    print(f'Execption: {e} id {id} filename {filename}')
+                    print(f'Count {idx+1}/{len(self.all_data)} Exception: {e} id {id} filename {filename}')
                     url = self.images[id]['url']
                     writer.writerow([id, url])
 
