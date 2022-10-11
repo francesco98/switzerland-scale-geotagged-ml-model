@@ -86,7 +86,7 @@ class DataHelper:
         if not data_dir.endswith(dataset_name):
             data_dir = data_dir + '/' + dataset_name
 
-        if not os.path.isfile(data_dir):
+        if not os.path.isdir(data_dir):
             raise RuntimeError(f'Data directory {data_dir} not existing')
 
         num_missing_labels = 0
