@@ -5,4 +5,5 @@ __pycache__/
 grid_builder/.DS_Store
 grid_builder/input/.DS_Store
 grid_builder/output/.DS_Store
+grid_builder/datadir/
 models_tensorflow/dataset
