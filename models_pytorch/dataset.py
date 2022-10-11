@@ -216,4 +216,4 @@ if __name__ == '__main__':
     # data_dir = '/home/hacke/projects/data/geolocation_classifier'
 
     check_data_set(base_dir, 'flickr_images', data_dir, False)
-    check_data_set(base_dir, 'geotag_185K', data_dir, False)
+    check_data_set(base_dir, 'geotags_185K', data_dir, False)

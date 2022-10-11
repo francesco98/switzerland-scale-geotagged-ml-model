@@ -89,7 +89,7 @@ def main():
     parser = argparse.ArgumentParser(description='PyTorch Geolocation classifier')
 
     parser.add_argument('--dataset', type=str, default='flickr_images', metavar='N',
-                        help='dataset, supported are geotags or flickr_images (default: flickr_images)')
+                        help='dataset, supported are geotags_185K or flickr_images (default: flickr_images)')
     parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
