@@ -82,6 +82,13 @@ class DataHelper:
         self.all_data = []
         self.all_labels = set()
 
+        # check data dir
+        if not data_dir.endswith(dataset_name):
+            data_dir = data_dir + '/' + dataset_name
+
+        if not os.path.isfile(data_dir):
+            raise RuntimeError(f'Data directory {data_dir} not existing')
+
         num_missing_labels = 0
         num_missing_images = 0
         num_excluded_images = 0

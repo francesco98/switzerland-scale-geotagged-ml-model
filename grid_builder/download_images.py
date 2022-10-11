@@ -30,8 +30,8 @@ def down_load_images(file_name: str, data_dir: str):
 
 
 def main():
-    #data_dir = '/home/hacke/projects/data/geolocation_classifier'
-    data_dir = '/mnt/store/geolocation_classifier/datadir'
+    #data_dir = '/home/hacke/projects/data/geolocation_classifier/flickr_images'
+    data_dir = '/mnt/store/geolocation_classifier/datadir/flickr_images'
     file_name = 'input/flickr_images.csv'
     down_load_images(file_name, data_dir)
 

@@ -65,7 +65,7 @@ def get_model(device, num_classes: int, input_shape):
     return model_ft
 
 
-def create_datahelper():
+def create_datahelper(dataset_name: str):
 
     hostname = socket.gethostname()
 
@@ -78,14 +78,18 @@ def create_datahelper():
         base_dir = '/home/hacke/projects/adncuba-geolocation-classifier/grid_builder'
         data_dir = '/home/hacke/projects/data/geolocation_classifier'
 
-    data_helper = DataHelper(base_dir=base_dir, dataset_name='flickr_images', data_dir=data_dir, test_fraction=0.8, seed=42)
+    data_helper = DataHelper(base_dir=base_dir, dataset_name=dataset_name, data_dir=data_dir, test_fraction=0.8, seed=42)
 
     return data_helper
 
 
 def main():
     # Training settings
-    parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
+
+    parser = argparse.ArgumentParser(description='PyTorch Geolocation classifier')
+
+    parser.add_argument('--dataset', type=str, default='flickr_images', metavar='N',
+                        help='dataset, supported are geotags or flickr_images (default: flickr_images)')
     parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
@@ -133,7 +137,7 @@ def main():
         test_kwargs.update(cuda_kwargs)
 
 
-    data_helper = create_datahelper()
+    data_helper = create_datahelper(args.dataset)
     training_dataset = ImageGeolocationDataset(data_helper.training_data)
     test_dataset = ImageGeolocationDataset(data_helper.test_data)
 
