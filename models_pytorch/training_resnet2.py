@@ -138,6 +138,8 @@ def main():
     data, label = training_dataset[0]
     input_shape = data.shape
 
+    print(f'Input shape {input_shape} output shape {(num_classes,)}')
+
     train_loader = torch.utils.data.DataLoader(training_dataset,**train_kwargs)
     test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
 
