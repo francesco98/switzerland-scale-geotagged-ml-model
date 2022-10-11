@@ -65,7 +65,7 @@ def get_model(device, num_classes: int, input_shape):
     return model_ft
 
 
-def create_datahelper(dataset_name: str):
+def create_datahelper(dataset_name: str, seed: int):
 
     hostname = socket.gethostname()
 
@@ -78,7 +78,7 @@ def create_datahelper(dataset_name: str):
         base_dir = '/home/hacke/projects/adncuba-geolocation-classifier/grid_builder'
         data_dir = '/home/hacke/projects/data/geolocation_classifier'
 
-    data_helper = DataHelper(base_dir=base_dir, dataset_name=dataset_name, data_dir=data_dir, test_fraction=0.8, seed=42)
+    data_helper = DataHelper(base_dir=base_dir, dataset_name=dataset_name, data_dir=data_dir, test_fraction=0.8, seed=seed)
 
     return data_helper
 
@@ -125,6 +125,7 @@ def main():
     else:
         device = torch.device("cpu")
 
+    print(f'Commandline args: {args}')
     print(f'Device: {device}')
 
     train_kwargs = {'batch_size': args.batch_size}
@@ -137,7 +138,7 @@ def main():
         test_kwargs.update(cuda_kwargs)
 
 
-    data_helper = create_datahelper(args.dataset)
+    data_helper = create_datahelper(args.dataset, args.seed)
     training_dataset = ImageGeolocationDataset(data_helper.training_data)
     test_dataset = ImageGeolocationDataset(data_helper.test_data)
 
@@ -153,6 +154,7 @@ def main():
     model = get_model(device, num_classes, input_shape)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
+
 
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
     for epoch in range(1, args.epochs + 1):
