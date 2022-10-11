@@ -158,6 +158,7 @@ class DataHelper:
                     print(f'Count {idx+1}/{len(self.all_data)} Exception: {e} id {id} filename {filename}')
                     url = self.images[id]['url']
                     writer.writerow([id, url])
+                    file.flush()
 
         return updated
 
