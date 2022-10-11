@@ -109,14 +109,22 @@ class DataHelper:
             name = url.split('/')[-1]
             file_name = data_dir + '/' + name
 
+            self.all_labels.add(label)
+
             if not os.path.isfile(file_name):
                 #print(f'No data for file with id {id} downloaded')
                 num_missing_images += 1
                 continue
 
             self.all_data.append({'id': id, 'filename': file_name, 'label': label})
-            self.all_labels.add(label)
 
+        # check the labels
+        for idx in range(len(self.all_labels)):
+            label = f'{idx}'
+            if label not in self.all_labels:
+                msg = f'Missing datapoint with label {label}, all-labels: {self.all_labels}'
+                print(f'ERROR: {msg}')
+                raise RuntimeError(msg)
 
         # train test splitt
         random.seed(seed)
@@ -128,8 +136,9 @@ class DataHelper:
         print('-' * 10)
         print(f'DataHelper {self.dataset_name} basedir {self.base_dir}')
         print(f'Missing: {num_missing_labels} labels and {num_missing_images} downloaded images, excluded {num_excluded_images} images')
-        print(f'Found {len(self.all_data)} of {len(self.images) - num_excluded_images} valid image, {len(self.all_labels)} labels, {len(self.training_data)} training data and {len(self.test_data)} test data')
+        print(f'Found {len(self.all_data)} of {len(self.images) - num_excluded_images} valid image, {len(self.all_labels)} labels, {len(self.training_data)} training data and {len(self.test_data)} test data (seed {seed})')
         print('-'*10)
+
 
     def update_excluded_file(self):
 
