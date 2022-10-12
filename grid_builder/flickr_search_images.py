@@ -1,8 +1,15 @@
 import os.path
 import csv
+import re
 
 import flickrapi
 
+
+# coordinates bounding boy switzerland according https://giswiki.hsr.ch/Bounding_Box
+MIN_LATITUDE_SWITZERLAND = 45.6755
+MAX_LATITUDE_SWITZERLAND = 47.9163
+MIN_LONGITUDE_SWITZERLAND = 5.7349
+MAX_LONGITUDE_SWITZERLAND = 10.6677
 
 CSV_HEADER = ['# id', 'url', 'longitude', 'latitude']
 
@@ -110,14 +117,9 @@ def read_cvs_file(file_name: str):
 
 
 def search_images_within_switzerland(flickr, images: dict, file):
-    # coordinates bounding boy switzerland according https://giswiki.hsr.ch/Bounding_Box
-    min_latitude = 45.6755
-    max_latitude = 47.9163
-    min_longitude = 5.7349
-    max_longitude = 10.6677
 
     # bbox=minimum_longitude, minimum_latitude, maximum_longitude, maximum_latitude.
-    bounding_box = f'{min_longitude},{min_latitude},{max_longitude},{max_latitude}'
+    bounding_box = f'{MIN_LONGITUDE_SWITZERLAND},{MIN_LATITUDE_SWITZERLAND},{MAX_LONGITUDE_SWITZERLAND},{MAX_LATITUDE_SWITZERLAND}'
 
     all_photos = []
 
@@ -173,7 +175,7 @@ def search_images_within_switzerland(flickr, images: dict, file):
         page += 1
 
 
-def main():
+def search_images():
     file_name = 'input/flickr_images.csv'
     images = read_cvs_file(file_name)
     flickr = initialize_flickr(False)
@@ -181,6 +183,134 @@ def main():
     with open(file_name, 'a', encoding='UTF8', newline='') as file:
         search_images_within_switzerland(flickr, images, file)
 
+def read_swiss_keywords():
+
+    key_words = set()
+    with open(f'input/swiss_keywords.txt', encoding='UTF8') as file:
+        lines = file.readlines()
+        for line in lines:
+            tokens = line.split()
+            for token in tokens:
+                key_words.add(token.lower())
+
+    return key_words
+
+def create_dataset_from_Ids(dataset_name: str, image_ids):
+
+    key_words = read_swiss_keywords()
+
+    flickr = initialize_flickr(False)
+
+    # create files
+    if not os.path.isfile(f'input/{dataset_name}_excluded.csv'):
+        with open(f'input/{dataset_name}_excluded.csv', 'w', encoding='UTF8', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['# id', 'url'])
+            file.flush()
+
+    if not os.path.isfile(f'input/{dataset_name}.csv'):
+        with open(f'input/{dataset_name}.csv', 'w', encoding='UTF8', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(CSV_HEADER)
+            file.flush()
+
+    images = read_cvs_file(f'input/{dataset_name}.csv')
+    with open(f'input/{dataset_name}.csv', 'a', encoding='UTF8', newline='') as file:
+        writer = csv.writer(file)
+
+
+        cnt = 0
+        for idx, id in enumerate(image_ids):
+            id = id.split('_')[0]
+
+            if id in images:
+                continue
+
+            try:
+                info = flickr.photos.getInfo(photo_id=id)
+                photo = info['photo']
+
+                if 'location' not in photo:
+                    continue
+
+                location = photo['location']
+                if 'latitude' not in location or 'longitude' not in location:
+                    continue
+                longitude = float(location['longitude'])
+                latitude = float(location['latitude'])
+
+                # check bounding box
+                if latitude < MIN_LATITUDE_SWITZERLAND or latitude > MAX_LATITUDE_SWITZERLAND or longitude < MIN_LONGITUDE_SWITZERLAND or longitude > MAX_LONGITUDE_SWITZERLAND:
+                    print( f'{idx}: photo id={id} longitude {longitude} latitude {latitude} not in bounding box')
+                    continue
+
+                # check tags
+                tags = photo['tags']
+                valid_tag = False
+                all_tokens = []
+                for tag in tags['tag']:
+                    tokens = re.split(';,: ',tag['raw'])
+                    for token in tokens:
+                        if token.lower() in key_words:
+                            valid_tag = True
+                            break
+                        all_tokens.append(token)
+                    if valid_tag:
+                        break
+
+                # check title
+                title = ''
+                if not valid_tag and photo['title'] and photo['title']['_content']:
+                    title = photo['title']['_content']
+                    tokens = re.split(';,: ',title)
+                    for token in tokens:
+                        if token.lower() in key_words:
+                            valid_tag = True
+                            break
+
+                # check description
+                description = ''
+                if not valid_tag and photo['description'] and photo['description']['_content']:
+                    description = photo['description']['_content']
+                    tokens = re.split(';,: ',description)
+                    for token in tokens:
+                        if token.lower() in key_words:
+                            valid_tag = True
+                            break
+
+                if not valid_tag:
+                    print(f'{idx}: photo id={id} not valid: tags {all_tokens} title {title} description {description}')
+                    continue
+
+                longitude = location['longitude']
+                latitude = location['latitude']
+                secret = photo['secret']
+                server = photo['server']
+                farm = photo['farm']
+
+                # example http://farm4.staticflickr.com/3109/2824840348_3c684b1d2c.jpg
+                url = f'https://farm{farm}.staticflickr.com/{server}/{id}_{secret}.jpg'
+                print(f'{idx}: {cnt} using photo id={id} longitude {longitude} latitude {latitude} url={url}')
+
+                writer.writerow([id, url, longitude, latitude])
+                file.flush()
+
+                cnt += 1
+            except Exception as e:
+                print()
+                print(f'{idx} ERROR photo id={id}: {e}')
+
+    print('-'*10)
+    print(f'Found {cnt} training data pint')
+    print('-'*10)
+
+
+
+
+
 
 if __name__ == '__main__':
-    main()
+    #search_images()
+    images = read_cvs_file('input/geotags_185K.csv')
+    ids = images.keys()
+    create_dataset_from_Ids('geotags_reconstructed', ids)
