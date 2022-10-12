@@ -78,7 +78,7 @@ class DataHelper:
         self.dataset_name = dataset_name
         self.images = read_cvs_file(base_dir + '/input/' + dataset_name + '.csv')
         self.labels = read_labels_file(base_dir + '/output/' + dataset_name + '_label.csv')
-        self.excluded = read_excluded_file(base_dir + '/output/' + dataset_name + '_excluded.csv')
+        self.excluded = read_excluded_file(base_dir + '/input/' + dataset_name + '_excluded.csv')
         self.all_data = []
         self.all_labels = set()
 
@@ -153,7 +153,7 @@ class DataHelper:
         ])
 
 
-        with open(self.base_dir + '/output/' + self.dataset_name + '_excluded.csv', 'a', encoding='UTF8', newline='') as file:
+        with open(self.base_dir + '/input/' + self.dataset_name + '_excluded.csv', 'a', encoding='UTF8', newline='') as file:
             writer = csv.writer(file)
 
             for idx, data in enumerate(self.all_data):
