@@ -215,15 +215,20 @@ def create_dataset_from_Ids(dataset_name: str, image_ids):
             file.flush()
 
     images = read_cvs_file(f'input/{dataset_name}.csv')
-    with open(f'input/{dataset_name}.csv', 'a', encoding='UTF8', newline='') as file:
-        writer = csv.writer(file)
+    excluded = read_excluded_file(f'input/{dataset_name}_excluded.csv')
+
+    with open(f'input/{dataset_name}.csv', 'a', encoding='UTF8', newline='') as file_valid, \
+            open(f'input/{dataset_name}_excluded.csv', 'w', encoding='UTF8', newline='') as file_excluded:
+
+        writer_valid = csv.writer(file_valid)
+        writer_excluded = csv.writer(file_excluded)
 
 
         cnt = 0
         for idx, id in enumerate(image_ids):
             id = id.split('_')[0]
 
-            if id in images:
+            if id in images or id in excluded:
                 continue
 
             try:
@@ -231,17 +236,24 @@ def create_dataset_from_Ids(dataset_name: str, image_ids):
                 photo = info['photo']
 
                 if 'location' not in photo:
+                    writer_excluded.writerow([id, 'no location tag'])
+                    file_excluded.flush()
                     continue
 
                 location = photo['location']
                 if 'latitude' not in location or 'longitude' not in location:
+                    writer_excluded.writerow([id, 'no location tags 2'])
+                    file_excluded.flush()
                     continue
+
                 longitude = float(location['longitude'])
                 latitude = float(location['latitude'])
 
                 # check bounding box
                 if latitude < MIN_LATITUDE_SWITZERLAND or latitude > MAX_LATITUDE_SWITZERLAND or longitude < MIN_LONGITUDE_SWITZERLAND or longitude > MAX_LONGITUDE_SWITZERLAND:
-                    print( f'{idx}: photo id={id} longitude {longitude} latitude {latitude} not in bounding box')
+                    print(f'{idx}: photo id={id} longitude {longitude} latitude {latitude} not in bounding box')
+                    writer_excluded.writerow([id, 'not in bounding box'])
+                    file_excluded.flush()
                     continue
 
                 # check tags
@@ -280,6 +292,8 @@ def create_dataset_from_Ids(dataset_name: str, image_ids):
 
                 if not valid_tag:
                     print(f'{idx}: photo id={id} not valid: tags {all_tokens} title {title} description {description}')
+                    writer_excluded.writerow([id, 'no valid tags'])
+                    file_excluded.flush()
                     continue
 
                 longitude = location['longitude']
@@ -292,11 +306,13 @@ def create_dataset_from_Ids(dataset_name: str, image_ids):
                 url = f'https://farm{farm}.staticflickr.com/{server}/{id}_{secret}.jpg'
                 print(f'{idx}: {cnt} using photo id={id} longitude {longitude} latitude {latitude} url={url}')
 
-                writer.writerow([id, url, longitude, latitude])
-                file.flush()
+                writer_valid.writerow([id, url, longitude, latitude])
+                file_valid.flush()
 
                 cnt += 1
             except Exception as e:
+                writer_excluded.writerow([id, 'exception'])
+                file_excluded.flush()
                 print()
                 print(f'{idx} ERROR photo id={id}: {e}')
 
