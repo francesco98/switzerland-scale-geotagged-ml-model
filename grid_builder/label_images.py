@@ -5,6 +5,8 @@ import os
 from GridBuilder import Point, Image, Grid
 
 # Coordinates bounding boy switzerland according https://giswiki.hsr.ch/Bounding_Box
+from grid_builder.flickr_search_images import read_cvs_file, read_excluded_file
+
 LOWER_BOUND = Point(45.6755, 5.7349)
 UPPER_BOUND = Point(47.9163, 10.6677)
 
@@ -13,40 +15,36 @@ MAX_POINTS = 1000
 
 
 
-def create_labels(input_filename):
-    base_name = os.path.splitext(input_filename)[0]
+def create_labels(dataset_name):
 
-    excluded_ids = []
-    excluded_imgs = 'input/' + base_name + '_excluded.csv'
+    images = read_cvs_file(f'input/{dataset_name}.csv')
+    excluded = read_excluded_file(f'input/{dataset_name}_excluded.csv')
 
-    if(os.path.exists(excluded_imgs)):
-        with open(excluded_imgs) as f:
-            csv_reader = csv.reader(f, delimiter=',')
-            for index, line in enumerate(csv_reader):
-                if index > 0:
-                    excluded_ids.append(line[0])
+    output_grid_file = 'output/' + dataset_name + "_grid.csv"
+    output_label_file = 'output/' + dataset_name + "_label.csv"
 
-    output_grid_file = 'output/' + base_name + "_grid.csv"
-    output_label_file = 'output/' + base_name + "_label.csv"
+    data_points = []
 
-    images = []
+    for id in images:
 
-    with open('input/' + input_filename) as f:
-        csv_reader = csv.reader(f, delimiter=',')
-        for index, line in enumerate(csv_reader):
-            if index > 0 and not line[0] in excluded_ids:
-                point = Point(float(line[3]), float(line[2]))
-                images.append(Image(line[0], line[1], point))
-            else:
-                print(f'Line {index} excluded')
+        if id in excluded:
+            continue
+
+        elem = images[id]
+        url = elem['url']
+        longitude = float(elem['longitude'])
+        latitude = float(elem['latitude'])
+
+        point = Point(latitude, longitude)
+        data_points.append(Image(id, url, point))
 
 
-    grid = Grid(images, LOWER_BOUND, UPPER_BOUND, MIN_POINTS, MAX_POINTS)
+    grid = Grid(data_points, LOWER_BOUND, UPPER_BOUND, MIN_POINTS, MAX_POINTS)
     grid.buildGrid()
     grid.toWkt(output_grid_file)
 
     header = ['# ID', 'Label']
-    labels = [[image.id, image.label] for image in images if image.label != None]
+    labels = [[data.id, data.label] for data in data_points if data.label != None]
 
     with open(output_label_file, 'w', encoding='UTF8', newline='') as f:
         writer = csv.writer(f)
@@ -55,6 +53,6 @@ def create_labels(input_filename):
 
 
 if __name__ == '__main__':
-
-    create_labels('flickr_images.csv')
-    #create_labels('geotags_185K.csv')
+    create_labels('flickr_images')
+    create_labels('geotags_reconstructed')
+    #create_labels('geotags_185K')
