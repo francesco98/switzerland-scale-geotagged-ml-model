@@ -14,6 +14,8 @@ def down_load_images(dataset_name: str, data_dir: str):
 
     total = len(images) - len(excluded)
     cnt = 1
+
+    # for id in reversed(list(images.keys())):
     for id in images:
 
         if id in excluded:
