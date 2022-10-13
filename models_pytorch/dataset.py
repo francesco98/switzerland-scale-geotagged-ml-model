@@ -215,5 +215,5 @@ if __name__ == '__main__':
     # base_dir = '/home/hacke/projects/adncuba-geolocation-classifier/grid_builder'
     # data_dir = '/home/hacke/projects/data/geolocation_classifier'
 
-    check_data_set(base_dir, 'flickr_images', data_dir, False)
-    check_data_set(base_dir, 'geotags_185K', data_dir, False)
+    #check_data_set(base_dir, 'flickr_images', data_dir, False)
+    check_data_set(base_dir, 'geotags_reconstructed', data_dir, False)
