@@ -184,21 +184,20 @@ def check_data_set(base_dir: str, data_set_name: str, data_dir: str, check_all_b
         helper = DataHelper(base_dir=base_dir,
                             dataset_name=data_set_name,
                             data_dir=data_dir,
-                            test_fraction=0.8, seed=42)
+                                test_fraction=0.8, seed=42)
 
+    batch_size = 250
     training_data = ImageGeolocationDataset(helper.training_data)
     data, label = training_data[1]
-    training_data_loader = torch.utils.data.DataLoader(training_data, batch_size=250, shuffle=True)
+    training_data_loader = torch.utils.data.DataLoader(training_data, batch_size=batch_size, shuffle=True)
 
-    cnt = 0
-    for batch in training_data_loader:
-        input = batch[0]
-        label = batch[1]
-        input = input.to(device)
-        label = label.to(device)
+    num_batches = int(len(training_data)/batch_size)
+    for batch_idx, (data, target) in enumerate(training_data_loader):
+        data = data.to(device)
+        target = target.to(device)
+        print(f'Batch {batch_idx+1}/{num_batches}')
 
-        cnt += 1
-        if not check_all_batches and cnt > 1000:
+        if not check_all_batches and batch_idx > 1000:
             print('Stopping batch check')
             break
 
