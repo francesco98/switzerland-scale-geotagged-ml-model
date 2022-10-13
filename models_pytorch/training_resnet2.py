@@ -163,8 +163,8 @@ def main():
         scheduler.step()
 
     if args.save_model:
-        torch.save(model.state_dict(), "geolocation_cnn.pt")
-        print('Saved model in file geolocation_cnn.pt')
+        torch.save(model.state_dict(), f"geolocation_cnn_{args.dataset}.pt")
+        print(f'Saved model in file geolocation_cnn_{args.dataset}.pt')
 
 
 if __name__ == '__main__':
