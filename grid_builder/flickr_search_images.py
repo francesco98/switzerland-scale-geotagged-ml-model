@@ -1,6 +1,8 @@
+import datetime
 import os.path
 import csv
 import re
+import time
 
 import flickrapi
 
@@ -122,57 +124,84 @@ def search_images_within_switzerland(flickr, images: dict, file):
     bounding_box = f'{MIN_LONGITUDE_SWITZERLAND},{MIN_LATITUDE_SWITZERLAND},{MAX_LONGITUDE_SWITZERLAND},{MAX_LATITUDE_SWITZERLAND}'
 
     all_photos = []
+    tags = 'Suisse,Schweiz,Switzerland,Svizzera,Swiss'
 
     writer = csv.writer(file)
-    page = 1
-    cnt = 1
-    while True:
-        #photos = flickr.photos.search(text='switzerland', bbox=bounding_box, extras='url_c,license', page=page)
-        photos = flickr.photos.search(tags='switzerland', bbox=bounding_box, extras='url_c,license', page=page)
 
-        total = photos['photos']['total']
-        pages = photos['photos']['pages']
-        photo_list = photos['photos']['photo']
-        lines = []
+    # flickr was founded Februar 2004 by Yahoo
+    start_date = datetime.date(year=2005, month=1, day=1)
+    end_date = datetime.date(year=2022, month=12, day=30)
 
-        print(f'Page {page}/{pages}, element {cnt}/{total}')
+    current_date = start_date
+    while current_date < end_date:
+        min_date = current_date
+        max_date = min_date + datetime.timedelta(days=1)
 
-        for elem in photo_list:
+        unix_time_min = time.mktime(min_date.timetuple())
+        unix_time_max = time.mktime(max_date.timetuple())
+        current_date = max_date
+        page = 1
 
-            id = elem.get('id')
-            url = elem.get('url_c')
-            title = elem.get('title')
+        print(f'Query date {current_date}')
 
-            if id is None or url is None:
-                print(f'ERROR incomplete data: id {id} url {url} title {title}')
-                continue
-
-            if id in images:
-                print(f'Id {id} already found (title {title})')
-                cnt += 1
-                continue
-
+        while True:
             try:
-                location = flickr.photos.geo.getLocation(photo_id=id)
-                latitude = location['photo']['location']['latitude']
-                longitude = location['photo']['location']['longitude']
-
-                print(f'Photo {cnt}/{total} : id={id} title={title} longitude={longitude} latitude={latitude}')
-
-                lines.append([id, url, longitude, latitude])
-                images[id] = {CSV_HEADER[1]: url, CSV_HEADER[2]: longitude, CSV_HEADER[3]: latitude}
-                cnt += 1
-            except:
-                print(f'ERROR photo {cnt}/{total} : id={id} title={title} no coordinates found')
+                photos = flickr.photos.search(min_upload_date=unix_time_min, max_upload_date=unix_time_max, tag_mode='any',
+                                          tags=tags, bbox=bounding_box, extras='url_c,license', page=page)
+            except Exception as e:
+                print(f'ERROR call search, {page}/{pages} date {current_date}: {e}')
+                continue
 
 
-        print(f'Page {page}/{pages} found {len(lines)}/{len(photo_list)} new files')
+            total = int(photos['photos']['total'])
 
-        if len(lines) > 0:
-            writer.writerows(lines)
-            file.flush()
+            if total <= 0:
+                break
 
-        page += 1
+            pages = int(photos['photos']['pages'])
+            photo_list = photos['photos']['photo']
+
+            print(f'Page {page}/{pages} date {current_date} total {total}')
+
+            new_cnt = 0
+            for idx, elem in enumerate(photo_list):
+
+                id = elem.get('id')
+                url = elem.get('url_c')
+                title = elem.get('title')
+
+                if id is None or url is None:
+                    print(f'ERROR incomplete data: id {id} url {url} title {title}')
+                    continue
+
+                if id in images:
+                    print(f'Id {id} already found (title {title})')
+                    continue
+
+                try:
+                    location = flickr.photos.geo.getLocation(photo_id=id)
+                    latitude = location['photo']['location']['latitude']
+                    longitude = location['photo']['location']['longitude']
+
+                    print(f'   Photo {idx}/{len(photo_list)} : id={id} title={title} longitude={longitude} latitude={latitude}')
+
+                    images[id] = {CSV_HEADER[1]: url, CSV_HEADER[2]: longitude, CSV_HEADER[3]: latitude}
+
+                    writer.writerow([id, url, longitude, latitude])
+                    file.flush()
+
+                    new_cnt += 1
+                except:
+                    print(f'   ERROR photo {idx}/{len(photo_list)} : id={id} title={title} no coordinates found')
+
+            # end for loop
+            print(f'Page {page}/{pages} found {new_cnt}/{total} new files')
+
+            page += 1
+            if page >= pages:
+                break
+
+
 
 
 def search_images():
@@ -326,7 +355,7 @@ def create_dataset_from_Ids(dataset_name: str, image_ids):
 
 
 if __name__ == '__main__':
-    #search_images()
-    images = read_cvs_file('input/geotags_185K.csv')
-    ids = images.keys()
-    create_dataset_from_Ids('geotags_reconstructed', ids)
+    search_images()
+    #images = read_cvs_file('input/geotags_185K.csv')
+    #ids = images.keys()
+    #create_dataset_from_Ids('geotags_reconstructed', ids)

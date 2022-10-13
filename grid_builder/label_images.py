@@ -54,5 +54,5 @@ def create_labels(dataset_name):
 
 if __name__ == '__main__':
     create_labels('flickr_images')
-    create_labels('geotags_reconstructed')
+    #create_labels('geotags_reconstructed')
     #create_labels('geotags_185K')
