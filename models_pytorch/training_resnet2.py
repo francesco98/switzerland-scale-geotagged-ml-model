@@ -139,8 +139,8 @@ def main():
 
 
     data_helper = create_datahelper(args.dataset, args.seed)
-    training_dataset = ImageGeolocationDataset(data_helper.training_data, is_test_set=F)
-    test_dataset = ImageGeolocationDataset(data_helper.test_data, is_test_set=True)
+    training_dataset = ImageGeolocationDataset(data_helper.training_data, augumentation=False)
+    test_dataset = ImageGeolocationDataset(data_helper.test_data, augumentation=False)
 
     num_classes = len(data_helper.all_labels)
     data, label = training_dataset[0]
@@ -148,7 +148,7 @@ def main():
 
     print(f'Input shape {input_shape} output shape {(num_classes,)}')
 
-    train_loader = torch.utils.data.DataLoader(training_dataset,**train_kwargs)
+    train_loader = torch.utils.data.DataLoader(training_dataset, **train_kwargs)
     test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
 
     model = get_model(device, num_classes, input_shape)
