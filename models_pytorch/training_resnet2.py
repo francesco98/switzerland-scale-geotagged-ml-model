@@ -139,8 +139,8 @@ def main():
 
 
     data_helper = create_datahelper(args.dataset, args.seed)
-    training_dataset = ImageGeolocationDataset(data_helper.training_data)
-    test_dataset = ImageGeolocationDataset(data_helper.test_data)
+    training_dataset = ImageGeolocationDataset(data_helper.training_data, is_test_set=F)
+    test_dataset = ImageGeolocationDataset(data_helper.test_data, is_test_set=True)
 
     num_classes = len(data_helper.all_labels)
     data, label = training_dataset[0]
