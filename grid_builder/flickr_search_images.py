@@ -130,6 +130,11 @@ def search_images_within_switzerland(flickr, images: dict, file):
 
     # flickr was founded Februar 2004 by Yahoo
     start_date = datetime.date(year=2005, month=1, day=1)
+
+    # 13.10.2022: we queried until 2012-02-23
+    start_date = datetime.date(year=2012, month=1, day=1)
+
+
     end_date = datetime.date(year=2022, month=12, day=30)
 
     current_date = start_date
