@@ -24,19 +24,19 @@ from grid_builder.flickr_search_images import read_cvs_file, read_labels_file, r
 
 class ImageGeolocationDataset(torch.utils.data.Dataset):
 
-    def __init__(self, files: List, is_test_set: bool):
+    def __init__(self, files: List, augumentation: bool):
         self.ids = [None] * len(files)
         self.labels = [None] * len(files)
         self.file_names = [None] * len(files)
-        self.is_test_set = is_test_set
+        self.augumentation = augumentation
 
         for idx, elem in enumerate(files):
             self.ids[idx] = elem['id']
             self.labels[idx] = int(elem['label'])
             self.file_names[idx] = elem['filename']
 
-        if self.is_test_set:
-            # just normalization for the test set
+        if not self.augumentation:
+            # just normalization
             self.transforms = transforms.Compose([
                     transforms.Resize(256),
                     transforms.CenterCrop(224),
@@ -44,7 +44,7 @@ class ImageGeolocationDataset(torch.utils.data.Dataset):
                     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ])
         else:
-            # Data augmentation and normalization for training
+            # Data augmentation and normalization
             self.transforms = transforms.Compose([
                     transforms.RandomResizedCrop(224),
                     transforms.RandomHorizontalFlip(),
@@ -198,7 +198,7 @@ def check_data_set(base_dir: str, data_set_name: str, data_dir: str, check_all_b
                                 test_fraction=0.8, seed=42)
 
     batch_size = 250
-    training_data = ImageGeolocationDataset(helper.training_data,is_test_set=False)
+    training_data = ImageGeolocationDataset(helper.training_data, augumentation=False)
     data, label = training_data[1]
     training_data_loader = torch.utils.data.DataLoader(training_data, batch_size=batch_size, shuffle=True)
 
