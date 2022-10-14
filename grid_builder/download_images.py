@@ -116,7 +116,7 @@ def main():
     #data_dir = f'/home/hacke/projects/data/geolocation_classifier/{dataset_name}'
     data_dir = f'/mnt/store/geolocation_classifier/datadir/{dataset_name}'
 
-    concurrent_down_load_images(5, dataset_name, data_dir)
+    concurrent_down_load_images(20, dataset_name, data_dir)
     #down_load_images(dataset_name, data_dir)
 
 
