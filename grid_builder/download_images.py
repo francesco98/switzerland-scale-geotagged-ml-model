@@ -3,6 +3,7 @@ import threading
 import urllib.request
 
 from flickr_search_images import read_cvs_file, read_excluded_file
+from grid_builder.env_helper import get_data_dir
 
 
 def thread_download(urls, data_dir):
@@ -113,8 +114,8 @@ def down_load_images(dataset_name: str, data_dir: str):
 
 def main():
     dataset_name = 'flickr_images'
-    #data_dir = f'/home/hacke/projects/data/geolocation_classifier/{dataset_name}'
-    data_dir = f'/mnt/store/geolocation_classifier/datadir/{dataset_name}'
+    data_dir = get_data_dir()
+    data_dir = f'{data_dir}/{dataset_name}'
 
     concurrent_down_load_images(100, dataset_name, data_dir)
     #down_load_images(dataset_name, data_dir)

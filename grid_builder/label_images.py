@@ -5,7 +5,7 @@ import os
 from GridBuilder import Point, Image, Grid
 
 # Coordinates bounding boy switzerland according https://giswiki.hsr.ch/Bounding_Box
-from grid_builder.flickr_search_images import read_cvs_file, read_excluded_file
+from grid_builder.flickr_search_images import read_cvs_file, read_excluded_file, read_validated_file
 
 LOWER_BOUND = Point(45.6755, 5.7349)
 UPPER_BOUND = Point(47.9163, 10.6677)
@@ -19,6 +19,7 @@ def create_labels(dataset_name):
 
     images = read_cvs_file(f'input/{dataset_name}.csv')
     excluded = read_excluded_file(f'input/{dataset_name}_excluded.csv')
+    validated = read_validated_file(f'input/{dataset_name}_validated.csv')
 
     output_grid_file = 'output/' + dataset_name + "_grid.csv"
     output_label_file = 'output/' + dataset_name + "_label.csv"
@@ -28,6 +29,9 @@ def create_labels(dataset_name):
     for id in images:
 
         if id in excluded:
+            continue
+
+        if id not in validated:
             continue
 
         elem = images[id]

@@ -19,7 +19,8 @@ import copy
 
 from torchvision import transforms
 
-from grid_builder.flickr_search_images import read_cvs_file, read_labels_file, read_excluded_file
+from grid_builder.env_helper import get_base_dir, get_data_dir
+from grid_builder.flickr_search_images import read_cvs_file, read_labels_file, read_excluded_file, read_validated_file
 
 
 class ImageGeolocationDataset(torch.utils.data.Dataset):
@@ -90,6 +91,7 @@ class DataHelper:
         self.images = read_cvs_file(base_dir + '/input/' + dataset_name + '.csv')
         self.labels = read_labels_file(base_dir + '/output/' + dataset_name + '_label.csv')
         self.excluded = read_excluded_file(base_dir + '/input/' + dataset_name + '_excluded.csv')
+        self.validated = read_validated_file(base_dir + '/input/' + dataset_name + '_validated.csv')
         self.all_data = []
         self.all_labels = set()
 
@@ -106,9 +108,23 @@ class DataHelper:
 
         for id in self.images:
 
+            url = self.images[id]['url']
+            name = url.split('/')[-1]
+            file_name = data_dir + '/' + name
+
+            if not os.path.isfile(file_name):
+                # print(f'No data for file with id {id} downloaded')
+                num_missing_images += 1
+                continue
+
             if id in self.excluded:
                 num_excluded_images += 1
                 continue
+
+            if id not in self.validated:
+                msg = f'ERROR: file {file_name} with id {id} not validated'
+                print(msg)
+                raise RuntimeError(msg)
 
             if id not in self.labels:
                 #print(f'Warning: no label for file with id {id}')
@@ -116,17 +132,7 @@ class DataHelper:
                 continue
 
             label = self.labels[id]
-            url = self.images[id]['url']
-            name = url.split('/')[-1]
-            file_name = data_dir + '/' + name
-
             self.all_labels.add(label)
-
-            if not os.path.isfile(file_name):
-                #print(f'No data for file with id {id} downloaded')
-                num_missing_images += 1
-                continue
-
             self.all_data.append({'id': id, 'filename': file_name, 'label': label})
 
         # check the labels
@@ -151,51 +157,15 @@ class DataHelper:
         print('-'*10)
 
 
-    def update_excluded_file(self):
-
-        updated = False
-
-        call_transforms = transforms.Compose([
-            transforms.Resize(224),
-            transforms.RandomCrop(224),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-
-
-        with open(self.base_dir + '/input/' + self.dataset_name + '_excluded.csv', 'a', encoding='UTF8', newline='') as file:
-            writer = csv.writer(file)
-
-            for idx, data in enumerate(self.all_data):
-                id = data['id']
-                filename = data['filename']
-                try:
-                    image = PIL.Image.open(filename)
-                    image = call_transforms(image)
-                except Exception as e:
-                    updated = True
-                    print(f'Count {idx+1}/{len(self.all_data)} Exception: {e} id {id} filename {filename}')
-                    url = self.images[id]['url']
-                    writer.writerow([id, url])
-                    file.flush()
-
-        return updated
-
 
 def check_data_set(base_dir: str, data_set_name: str, data_dir: str, check_all_batches: bool):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
     helper = DataHelper(base_dir=base_dir,
                         dataset_name=data_set_name,
                         data_dir=data_dir,
                         test_fraction=0.8, seed=42)
-
-    if helper.update_excluded_file():
-        helper = DataHelper(base_dir=base_dir,
-                            dataset_name=data_set_name,
-                            data_dir=data_dir,
-                                test_fraction=0.8, seed=42)
 
     batch_size = 250
     training_data = ImageGeolocationDataset(helper.training_data, augumentation=False)
@@ -217,13 +187,8 @@ def check_data_set(base_dir: str, data_set_name: str, data_dir: str, check_all_b
 
 
 if __name__ == '__main__':
-    # adnwsrtx01
-    base_dir = '/home/test-dev/projects/adncuba-geolocation-classifier/grid_builder'
-    data_dir = '/mnt/store/geolocation_classifier/datadir'
-
-    # hacke vmware
-    # base_dir = '/home/hacke/projects/adncuba-geolocation-classifier/grid_builder'
-    # data_dir = '/home/hacke/projects/data/geolocation_classifier'
+    base_dir = get_base_dir()
+    data_dir = get_data_dir()
 
     #check_data_set(base_dir, 'flickr_images', data_dir, False)
     check_data_set(base_dir, 'flickr_images', data_dir, False)

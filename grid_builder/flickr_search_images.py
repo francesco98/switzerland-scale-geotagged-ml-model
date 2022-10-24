@@ -42,6 +42,14 @@ def initialize_flickr(authorize: bool=False):
 
 
 def read_excluded_file(file_name: str):
+    return read_ids_from_file(file_name)
+
+
+def read_validated_file(file_name: str):
+    return read_ids_from_file(file_name)
+
+
+def read_ids_from_file(file_name: str):
     ids = {}
 
     with open(file_name, 'r', encoding='UTF8', newline='') as file:
@@ -53,7 +61,7 @@ def read_excluded_file(file_name: str):
 
             key = tokens[0]
             if key in ids:
-                msg = f'ERROR: duplicated image id {key}'
+                msg = f'ERROR: duplicated image id {key} in {file_name}'
                 print(msg)
                 raise RuntimeError(msg)
 
@@ -238,6 +246,13 @@ def create_dataset_from_Ids(dataset_name: str, image_ids):
     # create files
     if not os.path.isfile(f'input/{dataset_name}_excluded.csv'):
         with open(f'input/{dataset_name}_excluded.csv', 'w', encoding='UTF8', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['# id', 'url'])
+            file.flush()
+
+
+    if not os.path.isfile(f'input/{dataset_name}_validated.csv'):
+        with open(f'input/{dataset_name}_validated.csv', 'w', encoding='UTF8', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['# id', 'url'])
             file.flush()
