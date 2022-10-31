@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms, models
 from torch.optim.lr_scheduler import StepLR
-from torchvision.models import ResNet18_Weights
+from torchvision.models import ResNet18_Weights, ResNet101_Weights
 from torchsummary import summary
 
 from models_pytorch.dataset import DataHelper, ImageGeolocationDataset
@@ -52,6 +52,9 @@ def test(model, device, test_loader):
 
 
 def get_model(device, num_classes: int, input_shape):
+
+    # model_ft = models.resnet101(weights=ResNet101_Weights.DEFAULT)
+
     model_ft = models.resnet18(weights=ResNet18_Weights.DEFAULT)
     num_ftrs = model_ft.fc.in_features
 
