@@ -63,7 +63,7 @@ class LabelBuilder:
         return None
 
 
-    def create_labels(self, dataset_name, key_filename=False):
+    def create_labels(self, dataset_name):
 
         # read and convert datapoints
         data_points = convert_images_for_grid(dataset_name)
@@ -74,7 +74,7 @@ class LabelBuilder:
             image.label = label
 
         output_label_file = 'output/' + dataset_name + "_label.csv"
-        header = ['# ID', 'Label']
+        header = ['# ID', 'Filename', 'Label']
         labels = []
         labels_map = {}
 
@@ -84,13 +84,8 @@ class LabelBuilder:
 
             if data.label not in labels_map:
                 labels_map[data.label] = []
-
-            if key_filename:
-                id = os.path.basename(data.url)
-            else:
-                id = data.id
             
-            labels.append([id, data.label])
+            labels.append([data.id, os.path.basename(data.url), data.label])
             labels_map[data.label].append(data.id)
 
         print(f'Labeled {len(labels)} of {len(data_points)} datapoints ({len(data_points) - len(labels)} missed)')
@@ -112,6 +107,6 @@ class LabelBuilder:
 
 
 if __name__ == '__main__':
-    LabelBuilder().create_labels('flickr_images', key_filename=True)
+    LabelBuilder().create_labels('flickr_images')
     #create_labels('geotags_reconstructed')
     #create_labels('geotags_185K')

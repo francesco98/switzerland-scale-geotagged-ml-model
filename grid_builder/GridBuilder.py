@@ -1,5 +1,5 @@
 # if MacOS:
-# import pywraps2 as s2
+# import pywraps2 as s2
 # else:
 import s2geometry.pywraps2 as s2
 import csv
