@@ -1,5 +1,5 @@
 # if MacOS:
-# import pywraps2 as s2
+# import pywraps2 as s2
 # else:
 import s2geometry.pywraps2 as s2
 import csv
@@ -7,7 +7,7 @@ import csv
 # Class to represent coordinates (lat, lng)
 from typing import List
 
-from grid_builder.flickr_search_images import read_cvs_file, read_excluded_file, read_validated_file
+from utility import read_cvs_file, read_validated_file, read_excluded_file
 
 class Point:
     def __init__(self, lat_degrees: float, lng_degrees: float):
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     LOWER_BOUND = Point(45.6755, 5.7349)
     UPPER_BOUND = Point(47.9163, 10.6677)
 
-    MIN_POINTS = 500
+    MIN_POINTS = 0
     MAX_POINTS = 5000
     MAX_LEVEL = 12
 
