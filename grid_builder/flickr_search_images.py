@@ -6,14 +6,14 @@ import time
 
 import flickrapi
 
+from utility import CSV_HEADER, read_cvs_file, read_excluded_file
+
 
 # coordinates bounding boy switzerland according https://giswiki.hsr.ch/Bounding_Box
 MIN_LATITUDE_SWITZERLAND = 45.6755
 MAX_LATITUDE_SWITZERLAND = 47.9163
 MIN_LONGITUDE_SWITZERLAND = 5.7349
 MAX_LONGITUDE_SWITZERLAND = 10.6677
-
-CSV_HEADER = ['# id', 'url', 'longitude', 'latitude']
 
 
 def initialize_flickr(authorize: bool=False):
@@ -41,35 +41,6 @@ def initialize_flickr(authorize: bool=False):
     return flickr
 
 
-def read_excluded_file(file_name: str):
-    return read_ids_from_file(file_name)
-
-
-def read_validated_file(file_name: str):
-    return read_ids_from_file(file_name)
-
-
-def read_ids_from_file(file_name: str):
-    ids = {}
-
-    with open(file_name, 'r', encoding='UTF8', newline='') as file:
-        reader = csv.reader(file)
-
-        for tokens in reader:
-            if len(tokens) == 0 or tokens[0].startswith('#'):
-                continue
-
-            key = tokens[0]
-            if key in ids:
-                msg = f'ERROR: duplicated image id {key} in {file_name}'
-                print(msg)
-                raise RuntimeError(msg)
-
-            ids[key] = tokens[1]
-
-        return ids
-
-
 def read_labels_file(file_name: str):
 
     labels = {}
@@ -91,40 +62,6 @@ def read_labels_file(file_name: str):
             labels[key] = tokens[1]
 
     return labels
-
-
-
-def read_cvs_file(file_name: str):
-
-    images = {}
-
-    # open file for reading
-    if not os.path.isfile(file_name):
-        with open(file_name, 'x', encoding='UTF8', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(CSV_HEADER)
-
-    with open(file_name, 'r', encoding='UTF8', newline='') as file:
-        reader = csv.reader(file)
-
-        for tokens in reader:
-
-            if len(tokens) == 0 or tokens[0].startswith('#'):
-                continue
-
-            key = tokens[0]
-
-            if key in images:
-                msg = f'ERROR: duplicated image id {key}'
-                print(msg)
-                raise RuntimeError(msg)
-
-            images[key] = {CSV_HEADER[1]: tokens[1], CSV_HEADER[2]: tokens[2], CSV_HEADER[3]: tokens[3]}
-
-    return images
-
-
-
 
 def search_images_within_switzerland(flickr, images: dict, file):
 

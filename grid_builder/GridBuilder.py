@@ -7,6 +7,7 @@ import csv
 # Class to represent coordinates (lat, lng)
 from typing import List
 
+from utility import read_cvs_file, read_validated_file, read_excluded_file
 
 class Point:
     def __init__(self, lat_degrees: float, lng_degrees: float):
@@ -39,14 +40,19 @@ class Image:
 
 # Class to build the grid
 class Grid:
-    def __init__(self, images: List[Image], lowerBound: Point, upperBound: Point, minPoints: int, maxPoints: int):
+    def __init__(self, images: List[Image], dataset_name: str, lowerBound: Point, upperBound: Point, minPoints: int, maxPoints: int,maxLevel: int):
         for image in images:
             if not image.is_bounded(lowerBound, upperBound):
                 raise ValueError('Your points are not inside the given boundary')
-        
+
+        if maxLevel < 1 or maxLevel > s2.S2CellId.kMaxLevel:
+            raise ValueError(f'Illegal maxLevel {maxLevel}')
+
         self.__images = images
         self.__minPoints = minPoints
         self.__maxPoints = maxPoints
+        self.__maxLevel = maxLevel
+        self.__dataset_name = dataset_name
 
         self.__gridArray = None
     
@@ -67,7 +73,7 @@ class Grid:
                 outsideCellImages.append(image)
         
         return [insideCellImages, outsideCellImages]
-    
+
     def __assignLabel(self, images: List[Image], label):
         for image in images:
             image.label = label
@@ -78,10 +84,10 @@ class Grid:
         # Ignoring cells not having the minimum points
         if len(insideCellImages) > self.__minPoints:
             # If the cell contains at most the maximum number of points (or it is a leaf), than it is a class
-            if len(insideCellImages) <= self.__maxPoints or currentCell.level() == s2.S2CellId.kMaxLevel:
+            if len(insideCellImages) <= self.__maxPoints or currentCell.level() == self.__maxLevel:
                 self.__gridArray.append(currentCell)
                 self.__assignLabel(insideCellImages, len(self.__gridArray)-1)
-                                    
+
                 self.__images = outsideCellImages
             # Otherwise, add it to the queue to split it later
             else:
@@ -127,11 +133,75 @@ class Grid:
             wktList.append([index, "POLYGON ((" + ",".join([str(point) for point in points]) + "))"]) 
 
         if fileName:
-            header = ['# ID', 'WKT']
+            header = ['# Label', 'WKT']
 
             with open(fileName, 'w', encoding='UTF8', newline='') as f:
                 writer = csv.writer(f)
+                writer.writerow([f'# Grid created from dataset {self.__dataset_name}'])
                 writer.writerow(header)
                 writer.writerows(wktList)
         else:
             return wktList
+
+
+    def toCellIds(self,  fileName: str):
+        labels = [[index, cellId.id()] for index, cellId in enumerate(self.__gridArray)]
+
+        header = ['# Label', 'S2 cellId']
+
+        with open(fileName, 'w', encoding='UTF8', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([f'# Grid created from dataset {self.__dataset_name}'])
+            writer.writerow(header)
+            writer.writerows(labels)
+
+
+
+def convert_images_for_grid(dataset_name: str) -> List[Image]:
+
+    images = read_cvs_file(f'input/{dataset_name}.csv')
+    excluded = read_excluded_file(f'input/{dataset_name}_excluded.csv')
+    validated = read_validated_file(f'input/{dataset_name}_validated.csv')
+
+    data_points = []
+
+    for id in images:
+
+        if id in excluded:
+            continue
+
+        if id not in validated:
+            continue
+
+        elem = images[id]
+        url = elem['url']
+        longitude = float(elem['longitude'])
+        latitude = float(elem['latitude'])
+
+        point = Point(latitude, longitude)
+        data_points.append(Image(id, url, point))
+
+    return data_points
+
+
+if __name__ == '__main__':
+
+    polygons_grid_file = 'output/grid_polygons.csv'
+    cellId_grid_file = 'output/grid_cellIds.csv'
+
+    # Coordinates bounding boy switzerland according https://giswiki.hsr.ch/Bounding_Box
+    LOWER_BOUND = Point(45.6755, 5.7349)
+    UPPER_BOUND = Point(47.9163, 10.6677)
+
+    MIN_POINTS = 0
+    MAX_POINTS = 5000
+    MAX_LEVEL = 12
+
+    dataset_name = 'flickr_images'
+
+    data_points = convert_images_for_grid(dataset_name)
+
+    grid = Grid(data_points, dataset_name, LOWER_BOUND, UPPER_BOUND, MIN_POINTS, MAX_POINTS, MAX_LEVEL)
+    grid.buildGrid()
+    grid.toWkt(polygons_grid_file)
+    grid.toCellIds(cellId_grid_file)
