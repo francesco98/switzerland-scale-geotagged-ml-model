@@ -7,7 +7,7 @@ import csv
 # Class to represent coordinates (lat, lng)
 from typing import List
 
-from utility import read_cvs_file, read_validated_file, read_excluded_file
+from grid_builder.utility import read_cvs_file, read_validated_file, read_excluded_file
 
 class Point:
     def __init__(self, lat_degrees: float, lng_degrees: float):
@@ -40,6 +40,10 @@ class Image:
 
 # Class to build the grid
 class Grid:
+    # Coordinates bounding boy switzerland according https://giswiki.hsr.ch/Bounding_Box
+    LOWER_BOUND_SWITZERLAND = Point(45.6755, 5.7349)
+    UPPER_BOUND_SWITZERLAND = Point(47.9163, 10.6677)
+
     def __init__(self, images: List[Image], dataset_name: str, lowerBound: Point, upperBound: Point, minPoints: int, maxPoints: int,maxLevel: int):
         for image in images:
             if not image.is_bounded(lowerBound, upperBound):
@@ -189,9 +193,6 @@ if __name__ == '__main__':
     polygons_grid_file = 'output/grid_polygons.csv'
     cellId_grid_file = 'output/grid_cellIds.csv'
 
-    # Coordinates bounding boy switzerland according https://giswiki.hsr.ch/Bounding_Box
-    LOWER_BOUND = Point(45.6755, 5.7349)
-    UPPER_BOUND = Point(47.9163, 10.6677)
 
     MIN_POINTS = 0
     MAX_POINTS = 5000
@@ -201,7 +202,7 @@ if __name__ == '__main__':
 
     data_points = convert_images_for_grid(dataset_name)
 
-    grid = Grid(data_points, dataset_name, LOWER_BOUND, UPPER_BOUND, MIN_POINTS, MAX_POINTS, MAX_LEVEL)
+    grid = Grid(data_points, dataset_name, Grid.LOWER_BOUND_SWITZERLAND, Grid.UPPER_BOUND_SWITZERLAND, MIN_POINTS, MAX_POINTS, MAX_LEVEL)
     grid.buildGrid()
     grid.toWkt(polygons_grid_file)
     grid.toCellIds(cellId_grid_file)
