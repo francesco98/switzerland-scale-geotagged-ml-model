@@ -1,6 +1,8 @@
 from __future__ import print_function
 import argparse
 import socket
+import time
+import datetime
 
 import torch
 import torch.nn as nn
@@ -32,10 +34,12 @@ def train(args, model, criterion, device, train_loader, optimizer, epoch):
                 break
 
 
-def test(model, device, test_loader):
+def test(model, device, test_loader, epoch, duration):
     model.eval()
     test_loss = 0
     correct = 0
+
+
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
@@ -46,16 +50,20 @@ def test(model, device, test_loader):
 
     test_loss /= len(test_loader.dataset)
 
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset),
+    print('\nTest Set Epoch: {} Duration: {} Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+        epoch, datetime.timedelta(seconds=duration), test_loss, correct, len(test_loader.dataset),
         100. * correct / len(test_loader.dataset)))
 
 
-def get_model(device, num_classes: int, input_shape):
+def get_model(model_name: str, device, num_classes: int, input_shape):
 
-    # model_ft = models.resnet101(weights=ResNet101_Weights.DEFAULT)
+    if model_name.lower() is 'resnet101':
+        model_ft = models.resnet101(weights=ResNet101_Weights.DEFAULT)
+    elif model_name.lower() is 'resnet18':
+        model_ft = models.resnet18(weights=ResNet18_Weights.DEFAULT)
+    else:
+        raise RuntimeError(f'Unsupported model {model_name}')
 
-    model_ft = models.resnet18(weights=ResNet18_Weights.DEFAULT)
     num_ftrs = model_ft.fc.in_features
 
     # set numer of classes
@@ -91,6 +99,8 @@ def main():
 
     parser = argparse.ArgumentParser(description='PyTorch Geolocation classifier')
 
+    parser.add_argument('--model', type=str, default='resnet18', metavar='N',
+                        help='pretrained model, supported  values: resnet18, resnet101 (default: resnet18)')
     parser.add_argument('--dataset', type=str, default='flickr_images', metavar='N',
                         help='dataset, supported are geotags_185K or flickr_images (default: flickr_images)')
     parser.add_argument('--batch-size', type=int, default=64, metavar='N',
@@ -154,15 +164,16 @@ def main():
     train_loader = torch.utils.data.DataLoader(training_dataset, **train_kwargs)
     test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
 
-    model = get_model(device, num_classes, input_shape)
+    model = get_model(args.model, device, num_classes, input_shape)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 
-
+    start = time.time()
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
     for epoch in range(1, args.epochs + 1):
-        train(args, model,criterion, device, train_loader, optimizer, epoch)
-        test(model, device, test_loader)
+        train(args, model, criterion, device, train_loader, optimizer, epoch)
+        duration = time.time() - start
+        test(model, device, test_loader, epoch, duration)
         scheduler.step()
 
     if args.save_model:
