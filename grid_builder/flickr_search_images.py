@@ -6,7 +6,7 @@ import time
 
 import flickrapi
 
-from utility import CSV_HEADER, read_cvs_file, read_excluded_file
+from grid_builder.utility import CSV_HEADER, read_cvs_file, read_excluded_file
 
 
 # coordinates bounding boy switzerland according https://giswiki.hsr.ch/Bounding_Box
@@ -39,29 +39,6 @@ def initialize_flickr(authorize: bool=False):
         # Trade the request token for an access token
         flickr.get_access_token(verifier)
     return flickr
-
-
-def read_labels_file(file_name: str):
-
-    labels = {}
-    with open(file_name, 'r', encoding='UTF8', newline='') as file:
-        reader = csv.reader(file)
-
-        for tokens in reader:
-
-            if len(tokens) == 0 or tokens[0].startswith('#'):
-                continue
-
-            key = tokens[0]
-
-            if key in labels:
-                msg = f'ERROR: duplicated image id {key}'
-                print(msg)
-                raise RuntimeError(msg)
-
-            labels[key] = tokens[1]
-
-    return labels
 
 def search_images_within_switzerland(flickr, images: dict, file):
 

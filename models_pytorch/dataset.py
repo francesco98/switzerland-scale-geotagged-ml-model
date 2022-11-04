@@ -20,7 +20,7 @@ import copy
 from torchvision import transforms
 
 from grid_builder.env_helper import get_base_dir, get_data_dir
-from grid_builder.flickr_search_images import read_cvs_file, read_labels_file, read_excluded_file, read_validated_file
+from grid_builder.utility import read_cvs_file, read_labels_file, read_excluded_file, read_validated_file
 
 
 class ImageGeolocationDataset(torch.utils.data.Dataset):
@@ -53,6 +53,7 @@ class ImageGeolocationDataset(torch.utils.data.Dataset):
                     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ])
 
+        print(f'Dataset created: {len(files)} datapoints, augmentations: { "RandomResizedCrop and RandomHorizontalFlip" if self.augumentation else "none"}')
 
     def __len__(self):
         return len(self.ids)
@@ -82,10 +83,17 @@ class ImageGeolocationDataset(torch.utils.data.Dataset):
 
             raise e
 
+    def get_file_name(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+            return [self.file_names[i] for i in idx]
+        else:
+            return self.file_names[idx]
+
 
 class DataHelper:
 
-    def __init__(self, base_dir: str, dataset_name: str, data_dir: str, test_fraction: float=0.8, seed: int=42):
+    def __init__(self, base_dir: str, dataset_name: str, data_dir: str, test_fraction: float=0.8, seed: int=42, check_all_images=False):
         self.base_dir = base_dir
         self.dataset_name = dataset_name
         self.images = read_cvs_file(base_dir + '/input/' + dataset_name + '.csv')
@@ -131,17 +139,28 @@ class DataHelper:
                 num_missing_labels += 1
                 continue
 
+            if check_all_images:
+                try:
+                    image = PIL.Image.open(file_name)
+                    image = transforms.Resize(256)(image)
+
+                except Exception as e:
+                    print(f'Ignoring invalid filename {file_name}')
+                    #os.remove(file_name)
+                    continue
+
             label = self.labels[id]
             self.all_labels.add(label)
             self.all_data.append({'id': id, 'filename': file_name, 'label': label})
 
         # check the labels
-        for idx in range(len(self.all_labels)):
-            label = f'{idx}'
-            if label not in self.all_labels:
-                msg = f'Missing datapoint with label {label}, all-labels: {self.all_labels}'
-                print(f'ERROR: {msg}')
-                raise RuntimeError(msg)
+        if False:
+            for idx in range(len(self.all_labels)):
+                label = f'{idx}'
+                if label not in self.all_labels:
+                    msg = f'Missing datapoint with label {label}, all-labels: {self.all_labels}'
+                    print(f'ERROR: {msg}')
+                    raise RuntimeError(msg)
 
         # train test splitt
         random.seed(seed)

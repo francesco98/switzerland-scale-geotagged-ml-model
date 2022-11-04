@@ -5,7 +5,7 @@ import PIL
 from torchvision import transforms
 
 from grid_builder.env_helper import get_base_dir, get_data_dir
-from grid_builder.flickr_search_images import read_cvs_file, read_excluded_file, read_validated_file
+from grid_builder.utility import read_cvs_file, read_excluded_file, read_validated_file
 
 
 def check_images(base_dir: str, dataset_name: str, data_dir: str):

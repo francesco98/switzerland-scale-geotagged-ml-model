@@ -7,7 +7,7 @@ import os
 # else:
 import s2geometry.pywraps2 as s2
 
-from GridBuilder import Image, convert_images_for_grid
+from grid_builder.GridBuilder import Image, convert_images_for_grid
 
 class LabelBuilder:
 
@@ -43,6 +43,17 @@ class LabelBuilder:
                 cellId = s2.S2CellId(int(id))
 
                 self.__labelCellPairs.append((label, cellId))
+
+    def __len__(self):
+        return self.get_num_labels()
+
+    def __getitem__(self, idx):
+        elem = self.__labelCellPairs[idx]
+        return elem[0], elem[1]
+
+
+    def get_num_labels(self):
+        return len(self.__labelCellPairs)
 
     def get_label(self, image: Image) -> str:
 

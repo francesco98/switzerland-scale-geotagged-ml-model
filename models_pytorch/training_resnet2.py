@@ -13,7 +13,9 @@ from torch.optim.lr_scheduler import StepLR
 from torchvision.models import ResNet18_Weights, ResNet101_Weights
 from torchsummary import summary
 
+from grid_builder.LabelBuilder import LabelBuilder
 from models_pytorch.dataset import DataHelper, ImageGeolocationDataset
+from models_pytorch.utils import create_datahelper, get_model
 
 
 def train(args, model, criterion, device, train_loader, optimizer, epoch):
@@ -55,45 +57,6 @@ def test(model, device, test_loader, epoch, duration):
         100. * correct / len(test_loader.dataset)))
 
 
-def get_model(model_name: str, device, num_classes: int, input_shape):
-
-    if model_name.lower() is 'resnet101':
-        model_ft = models.resnet101(weights=ResNet101_Weights.DEFAULT)
-    elif model_name.lower() is 'resnet18':
-        model_ft = models.resnet18(weights=ResNet18_Weights.DEFAULT)
-    else:
-        raise RuntimeError(f'Unsupported model {model_name}')
-
-    num_ftrs = model_ft.fc.in_features
-
-    # set numer of classes
-    model_ft.fc = nn.Linear(num_ftrs, num_classes)
-
-    model_ft = model_ft.to(device)
-
-    # print a summary
-    summary(model_ft, input_shape)
-    return model_ft
-
-
-def create_datahelper(dataset_name: str, seed: int):
-
-    hostname = socket.gethostname()
-
-    # adnwsrtx01
-    base_dir = '/home/test-dev/projects/adncuba-geolocation-classifier/grid_builder'
-    data_dir = '/mnt/store/geolocation_classifier/datadir'
-
-    # hacke vmware
-    if hostname.startswith('adnlt903'):
-        base_dir = '/home/hacke/projects/adncuba-geolocation-classifier/grid_builder'
-        data_dir = '/home/hacke/projects/data/geolocation_classifier'
-
-    data_helper = DataHelper(base_dir=base_dir, dataset_name=dataset_name, data_dir=data_dir, test_fraction=0.8, seed=seed)
-
-    return data_helper
-
-
 def main():
     # Training settings
 
@@ -101,6 +64,8 @@ def main():
 
     parser.add_argument('--model', type=str, default='resnet18', metavar='N',
                         help='pretrained model, supported  values: resnet18, resnet101 (default: resnet18)')
+    parser.add_argument('--augmentations', action='store_true', default=False,
+                        help='For training data augmentations')
     parser.add_argument('--dataset', type=str, default='flickr_images', metavar='N',
                         help='dataset, supported are geotags_185K or flickr_images (default: flickr_images)')
     parser.add_argument('--batch-size', type=int, default=64, metavar='N',
@@ -150,12 +115,12 @@ def main():
         train_kwargs.update(cuda_kwargs)
         test_kwargs.update(cuda_kwargs)
 
-
+    labelBuilder = LabelBuilder()
     data_helper = create_datahelper(args.dataset, args.seed)
-    training_dataset = ImageGeolocationDataset(data_helper.training_data, augumentation=False)
+    training_dataset = ImageGeolocationDataset(data_helper.training_data, augumentation=args.augmentations)
     test_dataset = ImageGeolocationDataset(data_helper.test_data, augumentation=False)
 
-    num_classes = len(data_helper.all_labels)
+    num_classes = labelBuilder.get_num_labels()
     data, label = training_dataset[0]
     input_shape = data.shape
 
@@ -169,6 +134,8 @@ def main():
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 
     start = time.time()
+    model_file_name = f"geolocation_cnn_{args.dataset}_{args.model}.pt"
+
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
     for epoch in range(1, args.epochs + 1):
         train(args, model, criterion, device, train_loader, optimizer, epoch)
@@ -176,9 +143,9 @@ def main():
         test(model, device, test_loader, epoch, duration)
         scheduler.step()
 
-    if args.save_model:
-        torch.save(model.state_dict(), f"geolocation_cnn_{args.dataset}.pt")
-        print(f'Saved model in file geolocation_cnn_{args.dataset}.pt')
+        if args.save_model:
+            torch.save(model.state_dict(), model_file_name)
+            print(f'Saved model in file {model_file_name}')
 
 
 if __name__ == '__main__':

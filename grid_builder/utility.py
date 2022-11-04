@@ -59,3 +59,26 @@ def read_ids_from_file(file_name: str):
             ids[key] = tokens[1]
 
         return ids
+
+
+def read_labels_file(file_name: str):
+
+    labels = {}
+    with open(file_name, 'r', encoding='UTF8', newline='') as file:
+        reader = csv.reader(file)
+
+        for tokens in reader:
+
+            if len(tokens) == 0 or tokens[0].startswith('#'):
+                continue
+
+            key = tokens[0]
+
+            if key in labels:
+                msg = f'ERROR: duplicated image id {key}'
+                print(msg)
+                raise RuntimeError(msg)
+
+            labels[key] = int(tokens[2])
+
+    return labels
