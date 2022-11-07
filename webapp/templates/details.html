@@ -1,0 +1,16 @@
+    {% extends "base.html" %}
+
+    {% block content %}
+
+          <ul>
+              <li>Status: {{elem[0]}}</li>
+              <li>Id:     {{elem[1]}}</li>
+              <li>Target: {{elem[2]}}</li>
+              <li>CellId: {{elem[3]}}</li>
+              <li>Top 3 predictions: {{elem[4]}}</li>
+              <li>Top 3 probabilities: {{elem[5]}}</li>
+          </ul>
+        <img width='100%' height='auto' src='data:image/png;base64,{{image_heatmap}}'/>
+        <img width='100%' height='auto' src='data:image/png;base64,{{image_data}}'/>
+
+    {% endblock %}

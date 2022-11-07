@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+        <table>
+      <tr>
+          <th>Status</th>
+          <th>Id</th>
+          <th>Target</th>
+          <th>CellId</th>
+          <th>Top 3 predictions</th>
+          <th>Top 3 probabilities</th>
+      </tr>
+            {% for elem in predictions %}
+      <tr>
+        <td>{{elem[0]}}</td>
+         <td> <a href="{{ url_for('details' , id=elem[1]) }}">{{elem[1]}}</a></td>
+        <td>{{elem[2]}}</td>
+        <td>{{elem[3]}}</td>
+        <td>{{elem[4]}}</td>
+        <td>{{elem[5]}}</td>
+      </tr>
+  {% endfor %}
+    </table>
+{% endblock %}

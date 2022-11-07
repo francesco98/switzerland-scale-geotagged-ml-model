@@ -22,26 +22,29 @@ from models_pytorch.utils import create_datahelper, get_model
 
 def prediction(dataset: ImageGeolocationDataset, labelBuilder : LabelBuilder, model, device):
 
+    results = {}
     with torch.no_grad():
         for idx in range(len(dataset)):
             data, target = dataset[idx]
             data = torch.reshape(data, (1, data.shape[0], data.shape[1], data.shape[2]))
             target = target.item()
             cellId = labelBuilder.get_cellId(str(target))
-            filename = dataset.get_file_name(idx)
+
             data = data.to(device)
             output = model(data)
             probs = F.softmax(output, dim=1)
             probs = probs[0]
 
-            sorted = torch.argsort(probs, descending=True)
-            pred = sorted[0].item()
+            entry = dataset.get(idx)
+            entry['probabilities'] = [i.item() for i in probs]
+            entry['cellId'] = cellId
 
-            if pred == target:
-                print(f'OK,  top 3 predictions: {sorted[0:3]} probabilities: {probs[sorted[0:3]]} filename {filename}')
-            else:
-                print(f'NOK, top 3 predictions: {sorted[0:3]} probabilities: {probs[sorted[0:3]]} filename {filename}')
+            results[str(entry['id'])] = entry
 
+            if idx == 50:
+                break
+
+    return results
 
 
 def main():

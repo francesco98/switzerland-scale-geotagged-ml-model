@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Geolocation CNN</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css"/>
+    <style>
+       body {
+            background-color: white;
+            font-size: 25px;
+      }
+       .row {
+           display: flex;
+       }
+    </style>
+    {% if auto_reload %}
+    <meta http-equiv="refresh" content="{{auto_reload}}">
+    {% endif %}
+</head>
+
+<body>
+<section class="hero is-fullheight">
+
+    <div class="hero-head">
+        <div class="box">
+            <h1 class="hero-title">Geolocation prediction</h1>
+        </div>
+        <nav class="navbar">
+            <div class="container">
+
+                <div id="navbarMenuHeroA" class="navbar-menu">
+                    <div class="navbar-end">
+                        <a href="{{ url_for('validation') }}" class="navbar-item">
+                            Results validation data
+                        </a>
+                        <a href="{{ url_for('upload') }}" class="navbar-item">
+                            Upload a picture
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <div class="hero-body">
+        <div class="container has-text-left">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+    <footer>
+        <p>
+            Technical Demo powered by <a href="https://www.adnovum.ch/de/incubator/innovation_initiatives.html">AdNovum Informatik AG </a>
+        </p>
+    </footer>
+</section>
+</body>
+</html>

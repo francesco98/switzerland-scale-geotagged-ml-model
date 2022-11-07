@@ -83,12 +83,12 @@ class ImageGeolocationDataset(torch.utils.data.Dataset):
 
             raise e
 
-    def get_file_name(self, idx):
+    def get(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
-            return [self.file_names[i] for i in idx]
+            return {'ids': [self.ids[i] for i in idx], 'labels': [self.labels[i] for i in idx], 'filenames':  [self.file_names[i] for i in idx]}
         else:
-            return self.file_names[idx]
+            return {'id': self.ids[idx], 'label': self.labels[idx], 'filename': self.file_names[idx]}
 
 
 class DataHelper:

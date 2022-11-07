@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column is-4 is-offset-4">
+    {% if valid_age == True %}
+    <b>Hello {{user_data['name']}}, you are over 18 years old – you are allowed to order wine</b>
+    {% else %}
+    <b>Hello {{user_data['name']}} you are under 18 years old - you are allowed to order apple juice</b>
+    {% endif %}
+</div>
+{% endblock %}
