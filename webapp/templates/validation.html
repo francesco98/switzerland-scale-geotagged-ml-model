@@ -4,21 +4,21 @@
 
         <table>
       <tr>
-          <th>Status</th>
-          <th>Id</th>
-          <th>Target</th>
-          <th>CellId</th>
-          <th>Top 3 predictions</th>
-          <th>Top 3 probabilities</th>
+          <th>&nbsp; <a href="{{ url_for('validation', sort='status' ) }}">&nbsp; Status</a></th>
+          <th>&nbsp; Id</th>
+          <th>&nbsp; <a href="{{ url_for('validation', sort='target' ) }}">&nbsp; Target</a></th>
+          <th>&nbsp; CellId</th>
+          <th>&nbsp; Top 3 predictions</th>
+          <th>&nbsp; <a href="{{ url_for('validation', sort='probabilities' ) }}">&nbsp; Top 3 probabilities</a></th>
       </tr>
             {% for elem in predictions %}
       <tr>
-        <td>{{elem[0]}}</td>
-         <td> <a href="{{ url_for('details' , id=elem[1]) }}">{{elem[1]}}</a></td>
-        <td>{{elem[2]}}</td>
-        <td>{{elem[3]}}</td>
-        <td>{{elem[4]}}</td>
-        <td>{{elem[5]}}</td>
+        <td>&nbsp;  {{elem[0]}}</td>
+          <td>&nbsp;  <a href="{{ url_for('details' , idx=elem[1]) }}">{{elem[2]}}</a></td>
+        <td>&nbsp;  {{elem[3]}}</td>
+        <td>&nbsp;  {{elem[4]}}</td>
+        <td>&nbsp;  {{elem[5]}}</td>
+        <td>&nbsp;  {{elem[6]}}</td>
       </tr>
   {% endfor %}
     </table>

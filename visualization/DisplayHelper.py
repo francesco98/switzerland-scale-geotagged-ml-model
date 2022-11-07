@@ -60,11 +60,11 @@ class Display:
 
         for idx, (label, cell) in enumerate(self.labelBuilder):
             x, y = self.get_cell_points(cell)
-            id = str(cell.id())
+            id = cell.id()
 
             if id == ground_truth:
                 edge_color = 'red'
-                linewidth = 2.0
+                linewidth = 4.0
             else:
                 edge_color = 'black'
                 linewidth = None
@@ -72,7 +72,8 @@ class Display:
             if no_colors or probabilities[idx] < 0.05:
                 face_color = None
             else:
-                face_color = self.get_cell_color(probabilities[idx])
+                val = min(probabilities[idx] + 0.2, 1.0)
+                face_color = self.get_cell_color(val)
                 #face_color = None
 
 

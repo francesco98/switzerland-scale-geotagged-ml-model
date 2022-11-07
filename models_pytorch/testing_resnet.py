@@ -22,7 +22,7 @@ from models_pytorch.utils import create_datahelper, get_model
 
 def prediction(dataset: ImageGeolocationDataset, labelBuilder : LabelBuilder, model, device):
 
-    results = {}
+    results = []
     with torch.no_grad():
         for idx in range(len(dataset)):
             data, target = dataset[idx]
@@ -39,7 +39,8 @@ def prediction(dataset: ImageGeolocationDataset, labelBuilder : LabelBuilder, mo
             entry['probabilities'] = [i.item() for i in probs]
             entry['cellId'] = cellId
 
-            results[str(entry['id'])] = entry
+            results.append(entry)
+
 
             if idx == 50:
                 break

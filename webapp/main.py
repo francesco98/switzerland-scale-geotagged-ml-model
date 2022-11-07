@@ -30,6 +30,7 @@ labelBuilder: LabelBuilder=None
 model = None
 test_dataset = None
 test_dataset_results = None
+sorted_test_dataset = None
 display: Display=None
 
 if use_cuda:
@@ -42,23 +43,60 @@ else:
 # local helpers
 
 
-def convert_prediction_result(elem):
+def convert_prediction_result(elem, idx):
     id = elem['id']
     probabilities = elem['probabilities']
     cellId = elem['cellId']
     label = elem['label']
-    filename = elem['filename']
     sortedIdx = np.argsort(probabilities)[::-1]  # sorted and reversed oorder
     top3labels = sortedIdx[:3]
     top3Probs = [round(probabilities[i], 2) for i in top3labels]
     entry = []
-    entry.append('OK' if top3labels[0] == label else 'NOK')
-    entry.append(id)
-    entry.append(str(label))
-    entry.append(cellId.id())
-    entry.append(str(top3labels))
-    entry.append(str(top3Probs))
+    entry.append('OK' if top3labels[0] == label else 'NOK') # 0
+    entry.append(str(-1)) # 1
+    entry.append(id) # 2
+    entry.append(label) # 3
+    entry.append(cellId.id()) # 4
+    entry.append(top3labels) # 5
+    entry.append(top3Probs) # 6
+    entry.append(idx) # 7
     return entry
+
+
+def convert_and_sort_results(sort: str, results):
+
+    if sort == 'status':
+        reverse = True
+        def sort_func(elem):
+            return elem[0]
+
+    elif sort == 'target':
+        reverse = False
+        def sort_func(elem):
+            return elem[3]
+
+    elif sort == 'probabilities':
+        reverse = True
+        def sort_func(elem):
+            return elem[6][0] * 100 + elem[6][1] * 10 + elem[6][2]
+
+    else:
+        raise RuntimeError(f'Unsupported sorting order {sort}')
+
+    predictions = []
+    for idx in range(len(results)):
+        elem = results[idx]
+        entry = convert_prediction_result(elem,idx)
+
+        predictions.append(entry)
+
+    predictions.sort(reverse=reverse, key=sort_func)
+
+    for idx, entry in enumerate(predictions):
+        entry[1] = str(idx)
+
+
+    return predictions
 
 
 @app.route('/')
@@ -68,14 +106,12 @@ def index():
 
 @app.route('/validation')
 def validation():
-    predictions = []
-    for id in test_dataset_results:
-        elem = test_dataset_results[id]
-        entry = convert_prediction_result(elem)
+    global sorted_test_dataset
 
-        predictions.append(entry)
+    sorting = request.args.get('sort', type=str)
+    sorted_test_dataset = convert_and_sort_results(sorting, test_dataset_results)
 
-    return render_template('validation.html', predictions=predictions)
+    return render_template('validation.html', predictions=sorted_test_dataset)
 
 
 
@@ -87,20 +123,28 @@ def upload():
 
 @app.route('/details')
 def details():
-    id = request.args.get('id', type=str)
-    elem = test_dataset_results[id]
+    global sorted_test_dataset, test_dataset_results
 
-    entry = convert_prediction_result(elem)
+    idx = request.args.get('idx', type=int)
+    entry = sorted_test_dataset[idx]
+    elem = test_dataset_results[entry[7]]
 
-    probabilities = elem['probabilities']
     cellId = elem['cellId']
-    heatmap_buff = display.create_heatmap(probabilities=probabilities, ground_truth=str(cellId.id()))
+    probabilities = elem['probabilities']
+    filename = elem['filename']
+    heatmap_buff = display.create_heatmap(probabilities=probabilities, ground_truth=cellId.id())
     heatmap_data = base64.b64encode(heatmap_buff.getbuffer()).decode("ascii")
 
-    image_buff = display.read_data_image(elem['filename'])
+    image_buff = display.read_data_image(filename)
     image_data = base64.b64encode(image_buff.getbuffer()).decode("ascii")
 
-    return render_template('details.html', image_heatmap=heatmap_data, image_data=image_data ,elem=entry)
+    prev_idx = idx == 0 if idx == 0 else idx - 1
+    next_idx = idx if idx == len(sorted_test_dataset) - 1 else idx + 1
+
+
+    return render_template('details.html', image_heatmap=heatmap_data, image_data=image_data,
+                           elem=entry, next_idx=next_idx, prev_idx=prev_idx,
+                           total=len(test_dataset_results))
 
 
 def prepare_model_and_data(args):
