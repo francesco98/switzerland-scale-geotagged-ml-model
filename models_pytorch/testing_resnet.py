@@ -20,7 +20,7 @@ from models_pytorch.dataset import DataHelper, ImageGeolocationDataset
 from models_pytorch.utils import create_datahelper, get_model
 
 
-def prediction(dataset: ImageGeolocationDataset, labelBuilder : LabelBuilder, model, device):
+def prediction(dataset: ImageGeolocationDataset, labelBuilder : LabelBuilder, model, device, max_limit: int=None):
 
     results = []
     with torch.no_grad():
@@ -42,7 +42,7 @@ def prediction(dataset: ImageGeolocationDataset, labelBuilder : LabelBuilder, mo
             results.append(entry)
 
 
-            if idx == 50:
+            if max_limit and idx == max_limit:
                 break
 
     return results

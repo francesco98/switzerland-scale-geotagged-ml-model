@@ -10,6 +10,9 @@ import numpy as np
 import torch
 from flask import render_template, redirect, url_for, session, flash, Flask, request
 
+import matplotlib
+matplotlib.use('Agg')
+
 from datetime import date
 
 from grid_builder.LabelBuilder import LabelBuilder
@@ -170,7 +173,7 @@ def prepare_model_and_data(args):
     model.load_state_dict(torch.load(args.modelfilename, map_location=device))
     model.eval()
 
-    test_dataset_results = prediction(test_dataset, labelBuilder, model, device)
+    test_dataset_results = prediction(dataset=test_dataset, labelBuilder=labelBuilder, model=model, device=device,max_limit=None)
 
     display = Display(LOWER_BOUND_IMAGE, UPPER_BOUND_IMAGE, '../visualization/'+IMAGE_FILE_NAME, labelBuilder)
 

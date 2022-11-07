@@ -96,6 +96,7 @@ class Display:
         else:
             buf = BytesIO()
             fig.savefig(buf, format="png", dpi=self.dpi)
+            plt.close(fig)
             return buf
 
     def read_data_image(self, filename):
