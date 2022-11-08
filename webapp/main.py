@@ -116,7 +116,7 @@ def validation():
     sorting = request.args.get('sort', type=str)
     sorted_test_dataset = convert_and_sort_results(sorting, test_dataset_results)
 
-    return render_template('validation.html', predictions=sorted_test_dataset)
+    return render_template('validation.html', predictions=sorted_test_dataset, total=len(sorted_test_dataset))
 
 
 
@@ -187,7 +187,7 @@ def prepare_model_and_data(args):
 
     global data_helper, labelBuilder, test_dataset, model, test_dataset_results, display, predictor, empty_heatmap
 
-    args.modelfilename = 'geolocation_cnn_flickr_images_resnet18_04_11_2022.pt'
+    # args.modelfilename = 'geolocation_cnn_flickr_images_resnet18_04_11_2022.pt'
     print(f'Commandline args: {args}')
     print(f'Device: {device}')
 
@@ -208,7 +208,7 @@ def prepare_model_and_data(args):
 
     predictor = Predictor(model, device)
 
-    test_dataset_results = predict_dataset(dataset=test_dataset, labelBuilder=labelBuilder, model=model, device=device, max_limit=10)
+    test_dataset_results = predict_dataset(dataset=test_dataset, labelBuilder=labelBuilder, model=model, device=device, max_limit=args.max_testdata)
 
     display = Display(LOWER_BOUND_IMAGE, UPPER_BOUND_IMAGE, '../visualization/'+IMAGE_FILE_NAME, labelBuilder)
 
@@ -228,8 +228,17 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=123, metavar='S',
                         help='random seed (default: 123)')
 
+    parser.add_argument('--max-testdata', type=int, default=500, metavar='S',
+                        help='maximum test data (default: 500)')
+
+    parser.add_argument('--host', type=str, default='localhost', metavar='N',
+                        help='Listener host (default: localhost)')
+    parser.add_argument('--port', type=int, default=8282, metavar='N',
+                        help='Listener port (default: 8282)')
+
     args = parser.parse_args()
 
     prepare_model_and_data(args)
 
-    app.run(host='localhost', port=8282, ssl_context=None)
+    print(f'Starting on {args.host}:{args.port}')
+    app.run(host=args.host, port=args.port, ssl_context=None)
