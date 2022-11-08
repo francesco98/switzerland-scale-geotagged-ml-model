@@ -1,5 +1,6 @@
 import argparse
 import base64
+import io
 import json
 import os
 import time
@@ -8,6 +9,7 @@ from urllib.parse import urlparse
 
 import numpy as np
 import torch
+from PIL import Image
 from flask import render_template, redirect, url_for, session, flash, Flask, request
 
 import matplotlib
@@ -17,7 +19,7 @@ from datetime import date
 
 from grid_builder.LabelBuilder import LabelBuilder
 from models_pytorch.dataset import ImageGeolocationDataset, DataHelper
-from models_pytorch.testing_resnet import prediction
+from models_pytorch.testing_resnet import predict_dataset, Predictor
 from models_pytorch.utils import get_model, create_datahelper
 
 
@@ -35,6 +37,7 @@ test_dataset = None
 test_dataset_results = None
 sorted_test_dataset = None
 display: Display=None
+predictor: Predictor=None
 
 if use_cuda:
     device = torch.device("cuda")
@@ -44,8 +47,6 @@ else:
     device = torch.device("cpu")
 
 # local helpers
-
-
 def convert_prediction_result(elem, idx):
     id = elem['id']
     probabilities = elem['probabilities']
@@ -119,9 +120,39 @@ def validation():
 
 
 
-@app.route('/upload')
+@app.route('/upload', methods=['GET', 'POST'])
 def upload():
-    return render_template('upload.html')
+    global predictor
+
+    heatmap_data = None
+    image_data = None
+    elem = None
+
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' in request.files:
+            file = request.files['file']
+            file_content = file.read()
+
+            # display image
+            data_image = Image.open(io.BytesIO(file_content))
+            image_buff = display.create_data_image(data_image)
+            image_data = base64.b64encode(image_buff.getbuffer()).decode("ascii")
+
+            # predict geolocation
+            probabilities = predictor.predict_image(io.BytesIO(file_content))
+
+            sortedIdx = np.argsort(probabilities)[::-1]  # sorted and reversed oorder
+            top3labels = sortedIdx[:3]
+            top3Probs = [round(probabilities[i], 2) for i in top3labels]
+            elem = [top3labels, top3Probs]
+
+            # display heatmap
+            heatmap_buff = display.create_heatmap(probabilities=probabilities, ground_truth=None)
+            heatmap_data = base64.b64encode(heatmap_buff.getbuffer()).decode("ascii")
+
+
+    return render_template('upload.html', image_heatmap=heatmap_data, image_data=image_data, elem=elem)
 
 
 @app.route('/details')
@@ -138,7 +169,8 @@ def details():
     heatmap_buff = display.create_heatmap(probabilities=probabilities, ground_truth=cellId.id())
     heatmap_data = base64.b64encode(heatmap_buff.getbuffer()).decode("ascii")
 
-    image_buff = display.read_data_image(filename)
+    data_image = Image.open(filename)
+    image_buff = display.create_data_image(data_image)
     image_data = base64.b64encode(image_buff.getbuffer()).decode("ascii")
 
     prev_idx = idx == 0 if idx == 0 else idx - 1
@@ -152,7 +184,7 @@ def details():
 
 def prepare_model_and_data(args):
 
-    global data_helper, labelBuilder, test_dataset, model, test_dataset_results, display
+    global data_helper, labelBuilder, test_dataset, model, test_dataset_results, display, predictor
 
     args.modelfilename = 'geolocation_cnn_flickr_images_resnet18_04_11_2022.pt'
     print(f'Commandline args: {args}')
@@ -173,7 +205,9 @@ def prepare_model_and_data(args):
     model.load_state_dict(torch.load(args.modelfilename, map_location=device))
     model.eval()
 
-    test_dataset_results = prediction(dataset=test_dataset, labelBuilder=labelBuilder, model=model, device=device,max_limit=None)
+    predictor = Predictor(model, device)
+
+    test_dataset_results = predict_dataset(dataset=test_dataset, labelBuilder=labelBuilder, model=model, device=device, max_limit=10)
 
     display = Display(LOWER_BOUND_IMAGE, UPPER_BOUND_IMAGE, '../visualization/'+IMAGE_FILE_NAME, labelBuilder)
 

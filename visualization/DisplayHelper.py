@@ -99,9 +99,7 @@ class Display:
             plt.close(fig)
             return buf
 
-    def read_data_image(self, filename):
-
-        data_image = Image.open(filename)
+    def create_data_image(self, data_image):
 
         # What size does the figure need to be in inches to fit the image?
         figsize = (data_image.size[0] / float(self.dpi), data_image.size[1] / float(self.dpi))

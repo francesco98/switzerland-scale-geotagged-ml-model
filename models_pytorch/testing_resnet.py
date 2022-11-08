@@ -1,26 +1,58 @@
 from __future__ import print_function
 import argparse
+import io
 import os.path
 import socket
 import time
 import datetime
 
+import PIL
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
-from torchvision import datasets, transforms, models
-from torch.optim.lr_scheduler import StepLR
-from torchvision.models import ResNet18_Weights, ResNet101_Weights
-from torchsummary import summary
+from PIL import Image
+from torchvision import transforms
 
 from grid_builder.LabelBuilder import LabelBuilder
 from models_pytorch.dataset import DataHelper, ImageGeolocationDataset
 from models_pytorch.utils import create_datahelper, get_model
 
 
-def prediction(dataset: ImageGeolocationDataset, labelBuilder : LabelBuilder, model, device, max_limit: int=None):
+class Predictor:
+    def __init__(self, model, device):
+
+        self.model = model
+        self.device = device
+        # just normalization
+        self.transforms = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+
+        self.model.eval()
+
+    def predict_image(self, buff: io.BytesIO):
+
+        with torch.no_grad():
+            image = Image.open(buff)
+            image = image.convert('RGB')
+            image = self.transforms(image)
+
+
+            images = torch.reshape(image, (1, image.shape[0], image.shape[1], image.shape[2]))
+            images = images.to(self.device)
+
+            output = self.model(images)
+            probs = F.softmax(output, dim=1)
+            probs = [i.item() for i in probs[0]]
+
+            return probs
+
+
+def predict_dataset(dataset: ImageGeolocationDataset, labelBuilder : LabelBuilder, model, device, max_limit: int=None):
 
     results = []
     with torch.no_grad():
