@@ -28,8 +28,7 @@ from visualization.DisplayHelper import Display, LOWER_BOUND_IMAGE, UPPER_BOUND_
 
 app = Flask(__name__)
 
-use_cuda = torch.cuda.is_available()
-use_mps = torch.backends.mps.is_available()
+device = torch.device("cpu")
 data_helper: DataHelper=None
 labelBuilder: LabelBuilder=None
 model = None
@@ -40,12 +39,6 @@ display: Display=None
 predictor: Predictor=None
 empty_heatmap=None
 
-if use_cuda:
-    device = torch.device("cuda")
-elif use_mps:
-    device = torch.device("mps")
-else:
-    device = torch.device("cpu")
 
 # local helpers
 def convert_prediction_result(elem, idx):
