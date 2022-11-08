@@ -47,6 +47,6 @@ def get_model(model_name: str, device, num_classes: int, input_shape):
     model_ft = model_ft.to(device)
 
     # print a summary
-    summary(model_ft, input_shape)
+    summary(model_ft, input_shape, device=str(device))
     return model_ft
 
