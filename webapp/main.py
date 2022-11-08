@@ -38,6 +38,7 @@ test_dataset_results = None
 sorted_test_dataset = None
 display: Display=None
 predictor: Predictor=None
+empty_heatmap=None
 
 if use_cuda:
     device = torch.device("cuda")
@@ -105,7 +106,7 @@ def convert_and_sort_results(sort: str, results):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', num_cells=labelBuilder.get_num_labels(),image_heatmap=empty_heatmap)
 
 
 @app.route('/validation')
@@ -184,7 +185,7 @@ def details():
 
 def prepare_model_and_data(args):
 
-    global data_helper, labelBuilder, test_dataset, model, test_dataset_results, display, predictor
+    global data_helper, labelBuilder, test_dataset, model, test_dataset_results, display, predictor, empty_heatmap
 
     args.modelfilename = 'geolocation_cnn_flickr_images_resnet18_04_11_2022.pt'
     print(f'Commandline args: {args}')
@@ -211,6 +212,8 @@ def prepare_model_and_data(args):
 
     display = Display(LOWER_BOUND_IMAGE, UPPER_BOUND_IMAGE, '../visualization/'+IMAGE_FILE_NAME, labelBuilder)
 
+    heatmap_buff = display.create_heatmap(probabilities=None, ground_truth=None)
+    empty_heatmap = base64.b64encode(heatmap_buff.getbuffer()).decode("ascii")
 
 if __name__ == '__main__':
 

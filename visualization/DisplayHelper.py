@@ -81,7 +81,7 @@ class Display:
             self.draw_cell_box(id, x, y, alpha, face_color, edge_color, linewidth, ax)
 
 
-        ax.set_title('Plotting Spatial Data on Switzerland Map')
+        ax.set_title(f'Adaptive grid Switzerland with {idx+1} cells')
         ax.set_xlim(self.bbox[0], self.bbox[1])
         ax.set_ylim(self.bbox[2], self.bbox[3])
 
