@@ -138,6 +138,7 @@ def main():
 
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
     for epoch in range(1, args.epochs + 1):
+        print(f'Epoch {epoch} learning-rate {scheduler.get_last_lr()}')
         train(args, model, criterion, device, train_loader, optimizer, epoch)
         duration = time.time() - start
         test(model, device, test_loader, epoch, duration)
