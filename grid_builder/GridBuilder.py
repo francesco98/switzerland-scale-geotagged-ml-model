@@ -194,7 +194,7 @@ if __name__ == '__main__':
     cellId_grid_file = 'output/grid_cellIds.csv'
 
 
-    MIN_POINTS = 0
+    MIN_POINTS = 500
     MAX_POINTS = 5000
     MAX_LEVEL = 12
 
