@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms, models
-from torchvision.models import ResNet18_Weights, ResNet101_Weights
+from torchvision.models import ResNet18_Weights, ResNet101_Weights, ResNet50_Weights
 from torchsummary import summary
 
 from models_pytorch.dataset import DataHelper
@@ -34,6 +34,8 @@ def get_model(model_name: str, device, num_classes: int, input_shape):
 
     if model_name.lower() == 'resnet101':
         model_ft = models.resnet101(weights=ResNet101_Weights.DEFAULT)
+    elif model_name.lower() == 'resnet50':
+        model_ft = models.resnet50(weights=ResNet50_Weights.DEFAULT)
     elif model_name.lower() == 'resnet18':
         model_ft = models.resnet18(weights=ResNet18_Weights.DEFAULT)
     else:
