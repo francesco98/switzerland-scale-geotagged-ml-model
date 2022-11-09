@@ -133,7 +133,7 @@ def main():
     test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
 
     model = get_model(args.model, device, num_classes, input_shape)
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(reduction='mean')
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 
     start = time.time()
