@@ -63,7 +63,7 @@ def main():
     parser = argparse.ArgumentParser(description='PyTorch Geolocation classifier')
 
     parser.add_argument('--model', type=str, default='resnet18', metavar='N',
-                        help='pretrained model, supported  values: resnet18, resnet50, resnet101 (default: resnet18)')
+                        help='pretrained model, supported  values: resnet18, resnet34, resnet50, resnet101 (default: resnet18)')
     parser.add_argument('--augmentations', action='store_true', default=False,
                         help='For training data augmentations')
     parser.add_argument('--dataset', type=str, default='flickr_images', metavar='N',
