@@ -15,7 +15,7 @@ from torchsummary import summary
 
 from grid_builder.LabelBuilder import LabelBuilder
 from models_pytorch.dataset import DataHelper, ImageGeolocationDataset
-from models_pytorch.utils import create_datahelper, get_model
+from models_pytorch.utils import create_datahelper, get_model, get_preprocessing
 
 
 def train(args, model, criterion, device, train_loader, optimizer, epoch):
@@ -119,8 +119,9 @@ def main():
 
     labelBuilder = LabelBuilder()
     data_helper = create_datahelper(args.dataset, args.seed)
-    training_dataset = ImageGeolocationDataset(data_helper.training_data, augumentation=args.augmentations)
-    test_dataset = ImageGeolocationDataset(data_helper.test_data, augumentation=False)
+    preprocessing = get_preprocessing(args.model)
+    training_dataset = ImageGeolocationDataset(data_helper.training_data, preprocessing=preprocessing, augumentation=args.augmentations)
+    test_dataset = ImageGeolocationDataset(data_helper.test_data,  preprocessing=preprocessing, augumentation=False)
 
     num_classes = labelBuilder.get_num_labels()
     data, label = training_dataset[0]

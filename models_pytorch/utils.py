@@ -30,6 +30,27 @@ def create_datahelper(dataset_name: str, seed: int):
     return data_helper
 
 
+def get_preprocessing(model_name: str):
+
+    if model_name.lower() == 'resnet101':
+        transformation = ResNet101_Weights.DEFAULT.transforms()
+
+    elif model_name.lower() == 'resnet50':
+        transformation = ResNet50_Weights.DEFAULT.transforms()
+
+    elif model_name.lower() == 'resnet34':
+        transformation = ResNet34_Weights.DEFAULT.transforms()
+
+    elif model_name.lower() == 'resnet18':
+        transformation = ResNet18_Weights.DEFAULT.transforms()
+
+    else:
+        raise RuntimeError(f'Unsupported model {model_name}')
+
+    print(f'Preprocessing {transformation}')
+    return transformation
+
+
 def get_model(model_name: str, device, num_classes: int, input_shape):
 
     if model_name.lower() == 'resnet101':

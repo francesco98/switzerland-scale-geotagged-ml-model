@@ -18,6 +18,7 @@ import os
 import copy
 
 from torchvision import transforms
+from torchvision.transforms._presets import ImageClassification
 
 from grid_builder.env_helper import get_base_dir, get_data_dir
 from grid_builder.utility import read_cvs_file, read_labels_file, read_excluded_file, read_validated_file
@@ -25,11 +26,12 @@ from grid_builder.utility import read_cvs_file, read_labels_file, read_excluded_
 
 class ImageGeolocationDataset(torch.utils.data.Dataset):
 
-    def __init__(self, files: List, augumentation: bool):
+    def __init__(self, files: List, preprocessing: ImageClassification, augumentation: bool):
         self.ids = [None] * len(files)
         self.labels = [None] * len(files)
         self.file_names = [None] * len(files)
         self.augumentation = augumentation
+        self.preprocessing = preprocessing
 
         for idx, elem in enumerate(files):
             self.ids[idx] = elem['id']
@@ -39,18 +41,18 @@ class ImageGeolocationDataset(torch.utils.data.Dataset):
         if not self.augumentation:
             # just normalization
             self.transforms = transforms.Compose([
-                    transforms.Resize(256),
-                    transforms.CenterCrop(224),
+                    transforms.Resize(self.preprocessing.resize_size[0]),
+                    transforms.CenterCrop(self.preprocessing.crop_size[0]),
                     transforms.ToTensor(),
-                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                    transforms.Normalize(self.preprocessing.mean, self.preprocessing.std)
             ])
         else:
             # Data augmentation and normalization
             self.transforms = transforms.Compose([
-                    transforms.RandomResizedCrop(224),
+                    transforms.RandomResizedCrop(self.preprocessing.crop_size[0]),
                     transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
-                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                    transforms.Normalize(self.preprocessing.mean, self.preprocessing.std)
             ])
 
         print(f'Dataset created: {len(files)} datapoints, augmentations: { "RandomResizedCrop and RandomHorizontalFlip" if self.augumentation else "none"}')
