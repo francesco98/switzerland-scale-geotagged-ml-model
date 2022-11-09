@@ -78,6 +78,8 @@ def main():
                         help='learning rate (default: 1.0)')
     parser.add_argument('--gamma', type=float, default=0.7, metavar='M',
                         help='Learning rate step gamma (default: 0.7)')
+    parser.add_argument('--step-size', type=int, default=1, metavar='M',
+                        help='Learning rate step size (default: 1)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
     parser.add_argument('--no-mps', action='store_true', default=False,
@@ -136,7 +138,7 @@ def main():
     start = time.time()
     model_file_name = f"geolocation_cnn_{args.dataset}_{args.model}.pt"
 
-    scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
+    scheduler = StepLR(optimizer, step_size=args.step_size, gamma=args.gamma)
     for epoch in range(1, args.epochs + 1):
         print(f'Epoch {epoch} learning-rate {scheduler.get_last_lr()}')
         train(args, model, criterion, device, train_loader, optimizer, epoch)
