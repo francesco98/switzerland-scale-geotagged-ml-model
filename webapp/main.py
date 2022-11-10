@@ -20,8 +20,7 @@ from datetime import date
 from grid_builder.LabelBuilder import LabelBuilder
 from models_pytorch.dataset import ImageGeolocationDataset, DataHelper
 from models_pytorch.testing_resnet import predict_dataset, Predictor
-from models_pytorch.utils import get_model, create_datahelper
-
+from models_pytorch.utils import get_model, create_datahelper, get_preprocessing
 
 # globals
 from visualization.DisplayHelper import Display, LOWER_BOUND_IMAGE, UPPER_BOUND_IMAGE, IMAGE_FILE_NAME
@@ -185,8 +184,9 @@ def prepare_model_and_data(args):
     print(f'Device: {device}')
 
     data_helper = create_datahelper(args.dataset, args.seed)
+    preprocessing = get_preprocessing(args.model)
     labelBuilder = LabelBuilder()
-    test_dataset = ImageGeolocationDataset(data_helper.test_data, augumentation=False)
+    test_dataset = ImageGeolocationDataset(data_helper.test_data, preprocessing=preprocessing, augumentation=False)
 
     num_classes = labelBuilder.get_num_labels()
     data, label = test_dataset[0]
