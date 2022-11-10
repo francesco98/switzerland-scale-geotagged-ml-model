@@ -1,11 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
+
 <div class="row">
-        <b>Adaptive Grid, with {{num_cells}} cells</b>
+        <b>Adaptive grid with {{num_cells}} cells</b>
+</div>
+<div class="row">
+        <img width='100%' height='auto' src='data:image/png;base64,{{image_heatmap}}'/>
 </div>
 
 <div class="row">
-        <img width='100%' height='auto' src='data:image/png;base64,{{image_heatmap}}'/>
+        <b>CNN Model</b>
+</div>
+<div class="row">
+        <pre>{{model_summary}}</pre>
 </div>
 {% endblock %}
