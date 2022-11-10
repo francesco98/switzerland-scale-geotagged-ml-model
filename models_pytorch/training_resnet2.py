@@ -64,6 +64,10 @@ def main():
 
     parser.add_argument('--model', type=str, default='resnet18', metavar='N',
                         help='pretrained model, supported  values: resnet18, resnet34, resnet50, resnet101 (default: resnet18)')
+    parser.add_argument('--load-model', action='store_true', default=False,
+                        help='Flag for loading a model')
+    parser.add_argument('--model-filename', type=str, default=None, metavar='N',
+                        help='Filename fro saving the model(default: geolocation_cnn_<dataset name>_<model>.pt)')
     parser.add_argument('--augmentations', action='store_true', default=False,
                         help='For training data augmentations')
     parser.add_argument('--dataset', type=str, default='flickr_images', metavar='N',
@@ -127,17 +131,23 @@ def main():
     data, label = training_dataset[0]
     input_shape = data.shape
 
+    model_file_name = args.model_filename if args.model_filename else f"geolocation_cnn_{args.dataset}_{args.model}.pt"
+
     print(f'Input shape {input_shape} output shape {(num_classes,)}')
 
     train_loader = torch.utils.data.DataLoader(training_dataset, **train_kwargs)
     test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
 
     model = get_model(args.model, device, num_classes, input_shape)
+
+    if args.load_model:
+        model.load_state_dict(torch.load(model_file_name, map_location=device))
+        print(f'Loaded model from file {model_file_name}')
+
     criterion = nn.CrossEntropyLoss(reduction='mean')
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 
     start = time.time()
-    model_file_name = f"geolocation_cnn_{args.dataset}_{args.model}.pt"
 
     scheduler = StepLR(optimizer, step_size=args.step_size, gamma=args.gamma)
     for epoch in range(1, args.epochs + 1):
