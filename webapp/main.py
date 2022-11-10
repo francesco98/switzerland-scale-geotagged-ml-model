@@ -3,6 +3,7 @@ import base64
 import io
 import json
 import os
+import sys
 import time
 from functools import wraps
 from urllib.parse import urlparse
@@ -13,6 +14,8 @@ from PIL import Image
 from flask import render_template, redirect, url_for, session, flash, Flask, request
 
 import matplotlib
+from torchsummary import summary
+
 matplotlib.use('Agg')
 
 from datetime import date
@@ -31,6 +34,7 @@ device = torch.device("cpu")
 data_helper: DataHelper=None
 labelBuilder: LabelBuilder=None
 model = None
+input_shape = None
 test_dataset = None
 test_dataset_results = None
 sorted_test_dataset = None
@@ -98,7 +102,17 @@ def convert_and_sort_results(sort: str, results):
 
 @app.route('/')
 def index():
-    return render_template('index.html', num_cells=labelBuilder.get_num_labels(),image_heatmap=empty_heatmap)
+    model_summary = 'ERROR'
+    old_stdout = sys.stdout
+    try:
+        sys.stdout = mystdout = io.StringIO()
+        # print a summary
+        summary(model, input_shape, device=str(device))
+        model_summary = mystdout.getvalue()
+    except:
+        sys.stdout = old_stdout
+
+    return render_template('index.html', num_cells=labelBuilder.get_num_labels(), model_summary=model_summary, image_heatmap=empty_heatmap)
 
 
 @app.route('/validation')
@@ -177,7 +191,7 @@ def details():
 
 def prepare_model_and_data(args):
 
-    global data_helper, labelBuilder, test_dataset, model, test_dataset_results, display, predictor, empty_heatmap
+    global data_helper, labelBuilder, test_dataset, model, test_dataset_results, display, predictor, empty_heatmap, input_shape
 
     # args.modelfilename = 'geolocation_cnn_flickr_images_resnet18_04_11_2022.pt'
     print(f'Commandline args: {args}')

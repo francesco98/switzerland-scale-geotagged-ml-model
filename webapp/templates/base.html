@@ -15,6 +15,9 @@
        .row {
            display: flex;
        }
+       .container {
+           max-width: 2000px;
+       }
     </style>
     {% if auto_reload %}
     <meta http-equiv="refresh" content="{{auto_reload}}">
@@ -29,10 +32,13 @@
             <h1 class="hero-title">Geolocation prediction</h1>
         </div>
         <nav class="navbar">
-            <div class="container">
+            <div class="container is-widescreen">
 
                 <div id="navbarMenuHeroA" class="navbar-menu">
                     <div class="navbar-end">
+                        <a href="{{ url_for('index') }}" class="navbar-item">
+                            Home
+                        </a>
                         <a href="{{ url_for('validation', sort='probabilities' ) }}" class="navbar-item">
                             Results validation data
                         </a>
@@ -46,7 +52,7 @@
     </div>
 
     <div class="hero-body">
-        <div class="container has-text-left">
+        <div class="container is-widescreen has-text-left">
             {% block content %}
             {% endblock %}
         </div>
