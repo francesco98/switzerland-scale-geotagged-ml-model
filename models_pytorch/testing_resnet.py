@@ -74,7 +74,7 @@ def predict_dataset(dataset: ImageGeolocationDataset, labelBuilder : LabelBuilde
             results.append(entry)
 
 
-            if max_limit and idx == max_limit:
+            if max_limit and idx + 1 == max_limit:
                 break
 
     return results

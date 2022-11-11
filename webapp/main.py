@@ -87,7 +87,7 @@ def convert_and_sort_results(sort: str, results):
     predictions = []
     for idx in range(len(results)):
         elem = results[idx]
-        entry = convert_prediction_result(elem,idx)
+        entry = convert_prediction_result(elem, idx)
 
         predictions.append(entry)
 
@@ -119,10 +119,17 @@ def index():
 def validation():
     global sorted_test_dataset
 
+
     sorting = request.args.get('sort', type=str)
     sorted_test_dataset = convert_and_sort_results(sorting, test_dataset_results)
 
-    return render_template('validation.html', predictions=sorted_test_dataset, total=len(sorted_test_dataset))
+    correct = 0
+    for elem in sorted_test_dataset:
+        if elem[0] == 'OK':
+            correct += 1
+
+    percentage = 100 * correct / len(sorted_test_dataset)
+    return render_template('validation.html', predictions=sorted_test_dataset, percentage=int(percentage), correct=correct, total=len(sorted_test_dataset))
 
 
 
